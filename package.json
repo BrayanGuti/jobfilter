@@ -1,5 +1,28 @@
 {
   "name": "jobfilter",
+  "version": "0.1.0",
+  "description": "Busca vacantes en portales de empleo de Latinoamérica, filtra las empresas que reciclan ofertas y pinta cada vacante según tu perfil. Local y sin login.",
+  "license": "MIT",
+  "author": "Sebastian Asprino (https://asprino.dev)",
+  "homepage": "https://github.com/SebastianAsprino/jobfilter#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SebastianAsprino/jobfilter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SebastianAsprino/jobfilter/issues"
+  },
+  "keywords": [
+    "job-search",
+    "empleo",
+    "vacantes",
+    "latam",
+    "sveltekit",
+    "bun",
+    "drizzle-orm",
+    "sqlite",
+    "scraper"
+  ],
   "private": true,
   "type": "module",
   "scripts": {
