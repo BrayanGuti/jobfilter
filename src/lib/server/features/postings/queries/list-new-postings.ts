@@ -1,0 +1,61 @@
+import { and, desc, eq, sql } from 'drizzle-orm';
+import { db } from '$lib/server/db/client';
+import { companies, postings } from '$lib/server/db/schema';
+import { matchPosting, type Match } from '$lib/server/features/match/queries/match-posting';
+
+export type NewPosting = {
+	id: number;
+	platform: string;
+	url: string;
+	title: string;
+	company: string | null;
+	companyId: number | null;
+	location: string | null;
+	modality: string | null;
+	publishedAt: string;
+	repeatTimes: number;
+	repeatFirst: string | null;
+	match: Match;
+	/** Si la empresa tiene varias vacantes en la lista: cuántas y si esta es la que mejor encaja. */
+	sameCompany: { total: number; isBest: boolean } | null;
+};
+
+/** La lista principal: vacantes sin marcar de empresas que no están en lista negra. */
+export function listNewPostings(): NewPosting[] {
+	const rows = db
+		.select({
+			id: postings.id,
+			platform: postings.platform,
+			url: postings.url,
+			title: postings.title,
+			company: companies.name,
+			companyId: postings.companyId,
+			location: postings.location,
+			modality: postings.modality,
+			publishedAt: postings.publishedAt,
+			repeatTimes: postings.repeatTimes,
+			repeatFirst: postings.repeatFirst,
+			description: postings.description
+		})
+		.from(postings)
+		.leftJoin(companies, eq(companies.id, postings.companyId))
+		.where(and(eq(postings.status, 'nueva'), sql`${companies.list} IS NOT 'negra'`))
+		.orderBy(desc(postings.publishedAt))
+		.all()
+		.map(({ description, ...p }) => ({ ...p, match: matchPosting(p.title, description) }));
+
+	// Varias vacantes de una misma empresa: se marca la que mejor encaja contigo, salvo que
+	// la mejor sea roja (si todas son rojas, ninguna vale la pena).
+	const best = new Map<number, { bestId: number; total: number }>();
+	for (const [companyId, list] of Map.groupBy(rows, (p) => p.companyId)) {
+		if (companyId === null || list.length < 2) continue;
+		const top = list.reduce((a, b) => ((b.match.score ?? -1) > (a.match.score ?? -1) ? b : a));
+		const worthIt = top.match.level === 'verde' || top.match.level === 'naranja';
+		best.set(companyId, { bestId: worthIt ? top.id : -1, total: list.length });
+	}
+
+	return rows.map((p) => {
+		const b = p.companyId === null ? undefined : best.get(p.companyId);
+		return { ...p, sameCompany: b ? { total: b.total, isBest: b.bestId === p.id } : null };
+	});
+}
