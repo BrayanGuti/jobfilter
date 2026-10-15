@@ -1,5 +1,5 @@
 import type { PlatformAdapter } from './types';
 import { getonbrd } from './getonbrd';
 
-// Se agregan acá a medida que se integra cada plataforma (ver PLAN.md, etapas).
+// Una entrada por plataforma integrada. Cómo agregar una: docs/plataformas.md
 export const adapters: PlatformAdapter[] = [getonbrd];
