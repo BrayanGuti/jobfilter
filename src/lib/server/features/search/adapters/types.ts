@@ -17,6 +17,11 @@ export type RawPosting = {
 	publishedAt: Date;
 	/** Fecha tal como vino de la plataforma ("hace 3 días", timestamp, etc.). */
 	publishedRaw: string;
+	/**
+	 * La fecha es solo un tope ("Más de 30 días") o no se entendió: se guarda la primera vez,
+	 * pero no se usa para detectar republicaciones.
+	 */
+	publishedApprox?: boolean;
 };
 
 export type SearchContext = {
@@ -32,5 +37,15 @@ export interface PlatformAdapter {
 	name: string;
 	/** Pausa aleatoria entre peticiones, en milisegundos. */
 	delay: { min: number; max: number };
+	/**
+	 * La plataforma busca por sinónimos ("tech lead" → "Líder técnico de instalaciones"): la
+	 * búsqueda descarta las vacantes cuyo título y descripción no mencionan el término.
+	 */
+	looseSearch?: boolean;
 	search(term: string, ctx: SearchContext): AsyncGenerator<RawPosting>;
+	/**
+	 * Para plataformas cuyo listado no trae la descripción: la búsqueda lo llama solo con las
+	 * vacantes que todavía no están en la base, y mezcla lo que devuelva.
+	 */
+	fetchDetail?(posting: RawPosting, ctx: SearchContext): Promise<Partial<RawPosting>>;
 }

@@ -56,7 +56,7 @@ JobFilter does that part for you. You only decide where to apply.
 
 ## Platforms
 
-✅ GetOnBoard · 🔜 Computrabajo · ⏳ LinkedIn, elempleo, Torre, PeakU, Hireline, Magneto365
+✅ GetOnBoard · ✅ Computrabajo (17 Latin American countries) · 🔜 LinkedIn · ⏳ elempleo, Torre, PeakU, Hireline, Magneto365
 
 See [docs/plataformas.md](docs/plataformas.md) (Spanish) for each platform's status, what's
 known about integrating it, and a step-by-step guide to add a new one. **That's the best way

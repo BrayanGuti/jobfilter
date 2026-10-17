@@ -13,8 +13,13 @@
    país**, o **presenciales/híbridas en tu ciudad**, y solo en los idiomas que aceptas.
 3. Guarda cada vacante con su **fecha de publicación** y **quién la publica**, y registra
    cada fecha de publicación distinta (así se detectan las republicaciones).
-4. La misma vacante encontrada con varias palabras clave es una sola fila.
-5. Al terminar, recalcula la lista negra (ver abajo).
+4. La misma vacante encontrada con varias palabras clave es una sola fila. En plataformas que
+   buscan por sinónimos (como Computrabajo), solo se guardan las vacantes que mencionan la
+   búsqueda (sus palabras en orden y cerca).
+5. En las plataformas cuyo listado no trae la descripción (como Computrabajo), se pide la
+   página de cada vacante **solo la primera vez que aparece**. Por eso la primera búsqueda
+   tarda bastante más que las siguientes.
+6. Al terminar, recalcula la lista negra (ver abajo).
 
 Las plataformas corren en paralelo; dentro de cada una, las peticiones van de a una.
 
@@ -53,6 +58,8 @@ Cuando publica **la misma vacante 3 o más veces dentro de 3 meses**.
   <fecha>"**.
 - Publicaciones a menos de **7 días** entre sí cuentan como una sola (por ejemplo, la misma
   vacante en dos plataformas o en dos versiones el mismo día).
+- Las fechas que son solo un tope ("Más de 30 días") no cuentan: cambiarían cada día y
+  parecerían republicaciones.
 
 ### Qué es "la misma vacante"
 

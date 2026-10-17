@@ -5,8 +5,8 @@
 | Plataforma | Estado | Cómo se integra | Dificultad estimada |
 |---|---|---|---|
 | [GetOnBoard](https://www.getonbrd.com) | ✅ Integrada | API pública JSON | — |
-| [Computrabajo](https://co.computrabajo.com) | 🔜 Siguiente | HTML renderizado en el servidor | Baja |
-| [LinkedIn](https://www.linkedin.com/jobs) | Pendiente | Endpoint público de invitados (sin login), HTML | Baja-media (es la que más limita) |
+| [Computrabajo](https://co.computrabajo.com) | ✅ Integrada | HTML renderizado en el servidor + detalle de cada vacante nueva | — |
+| [LinkedIn](https://www.linkedin.com/jobs) | 🔜 Siguiente | Endpoint público de invitados (sin login), HTML | Baja-media (es la que más limita) |
 | [elempleo](https://www.elempleo.com/co/) | Pendiente | API interna del sitio | Baja-media |
 | [Torre](https://torre.ai) | Pendiente | API de búsqueda (el formato cambió, hay que redescubrirlo) | Media |
 | [PeakU](https://peaku.co) | Pendiente | Estado embebido en el HTML (Nuxt) | Media |
@@ -31,9 +31,26 @@ Sondeo hecho sin login y con un User-Agent de navegador (octubre de 2026):
 - **LinkedIn**: `https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=<texto>&location=<país>&f_TPR=r<segundos>&start=<offset>`
   devuelve tarjetas HTML con `data-entity-urn="urn:li:jobPosting:<id>"`. `f_TPR=r7776000` son
   90 días. Hay que ir muy despacio: es la que más limita por tasa.
-- **Computrabajo**: `https://co.computrabajo.com/trabajo-de-<texto-con-guiones>`, HTML
-  renderizado en el servidor, sin Cloudflare en las pruebas. Muchas vacantes salen como
-  "Empresa confidencial": se agrupan por descripción para la lista negra.
+- **Computrabajo**: un subdominio por país con el mismo formato (`co`, `mx`, `pe`, `ar`,
+  `cl`, `ec`, `ve`, `bo`, `py`, `uy`, `gt`, `sv`, `hn`, `ni`, `cr`, `pa`, `do`); el adapter
+  elige según `location.country`.
+  - Búsqueda: `https://co.computrabajo.com/trabajo-de-<término>-en-<lugar>?by=publicationtime&pubdate=<días>&p=<página>`.
+    `<lugar>` es `remoto` o el slug de la ciudad (`barranquilla`, `bogota`); el slug del
+    término quita tildes y puntos (`node.js` → `node-js`).
+  - `pubdate` acepta 1, 3, 7, 15 o 30 días; `by=publicationtime` ordena por fecha (no
+    estricto). 20 vacantes por página; el total viene en el `<h1>`.
+  - Cada tarjeta es un `<article class="box_offer" data-id="…">` con título, empresa (link a
+    su perfil; sin link es confidencial: "Importante empresa del sector"), ubicación, fecha
+    ("Hace 3 horas", "Ayer", "Hace 5 días", "14 de septiembre" o "Más de 30 días") y etiquetas `Remoto` o `Presencial y
+    remoto` (híbrido).
+  - La tarjeta no trae la descripción: se pide la página de la vacante solo para las nuevas
+    (bloque "Descripción de la oferta", que incluye requisitos y conocimientos).
+  - La búsqueda por ciudad cuela algunas de otras ciudades: el adapter vuelve a filtrar con
+    la ubicación de cada tarjeta.
+  - Busca por sinónimos: "tech lead" en Barranquilla trae 72 resultados, entre ellos
+    "Director Técnico Farmacéutico". El adapter declara `looseSearch: true` y la búsqueda
+    solo guarda las que mencionan el término en el título o la descripción, con sus palabras
+    en orden y cerca (en una prueba real, eso descartó 148 de 180).
 - **elempleo**: el sitio llama a `api/joboffers/findbyfilter` (búsqueda) y
   `api/joboffers/getjoboffer` (detalle).
 - **PeakU**: Nuxt con SSR; el estado de la página viene en `window.__NUXT__`.
@@ -94,14 +111,27 @@ export const miPlataforma: PlatformAdapter = {
 };
 ```
 
+Si el listado no trae la descripción, implementa también `fetchDetail(posting, ctx)`: la
+búsqueda lo llama solo para las vacantes que todavía no están en la base, así que cuesta una
+petición por vacante nueva y nada en las búsquedas siguientes.
+
+Si la plataforma devuelve resultados que no mencionan lo que buscaste (sinónimos, búsqueda
+"inteligente"), declara `looseSearch: true`: la búsqueda descarta las vacantes cuyo título y
+descripción no mencionan el término (sus palabras en orden y con hasta 2 palabras entre
+una y otra).
+
 Reglas del adapter:
 
 - Solo traduce y filtra. No guarda nada: de eso se encarga la búsqueda.
 - Usa siempre `ctx.client`: ya maneja pausas, reintentos y bloqueos (un 429, un 403 o un
   captcha pausan la plataforma 24 h).
 - Corta la paginación en cuanto llegue a vacantes anteriores a `since`.
-- Si la fecha viene relativa ("hace 3 días"), conviértela a `Date` y guarda el texto
-  original en `publishedRaw`.
+- Si la fecha viene como texto ("Hace 3 días", "14 de septiembre"), conviértela con
+  `parsePublishedDate` de `$lib/server/shared/relative-date` y guarda el texto original en
+  `publishedRaw`. Si la fecha es solo un tope ("Más de 30 días") o no se entiende, marca
+  `publishedApprox: true`: así no se confunde con una republicación.
+- Exporta las funciones de parseo por separado (como `parseSearchPage` y `parseDetail` en
+  `computrabajo.ts`) para poder probarlas contra los fixtures.
 - Nunca inicies sesión ni uses cookies de una cuenta.
 
 ### 3. Regístrala
@@ -111,7 +141,11 @@ en `src/lib/platforms.ts`, agrégalo con un tono que se distinga de los demás.
 
 ### 4. Prueba
 
+Escribe `<plataforma>.test.ts` junto al adapter, con tests del parser contra tus fixtures
+(`computrabajo.test.ts` sirve de ejemplo). No hagas peticiones reales en los tests.
+
 ```sh
+bun run test      # tests de los parsers
 bun run check     # tipos
 bun run buscar    # una búsqueda real desde la terminal
 ```

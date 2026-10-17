@@ -2,10 +2,12 @@ import type { PlatformProgress, SearchProgress } from '$lib/progress';
 import { recalculateBlacklist } from '$lib/server/features/companies/commands/recalculate-blacklist';
 import { listKeywords, type Keyword } from '$lib/server/features/keywords/queries/list-keywords';
 import { savePosting } from '$lib/server/features/postings/commands/save-posting';
+import { postingExists } from '$lib/server/features/postings/queries/posting-exists';
 import { BlockedError, createClient } from '$lib/server/shared/http';
+import { mentionsTerm } from '$lib/server/shared/normalize';
 import { loadLocation, type Location } from '$lib/server/shared/profile';
 import { adapters } from '../adapters';
-import type { PlatformAdapter } from '../adapters/types';
+import type { PlatformAdapter, RawPosting, SearchContext } from '../adapters/types';
 import { clearPlatformFailures, finishRun, lastFinishedRun, pausePlatform, pausedUntil, startRun } from '../run-log';
 import { search } from '../state';
 
@@ -52,6 +54,23 @@ function sinceFor(keyword: Keyword, lastRun: string | null): Date {
 	return new Date(Math.max(windowStart, Date.parse(lastRun) - OVERLAP_MS));
 }
 
+/**
+ * Si el detalle de una vacante falla (404, oferta retirada), se guarda sin descripción y la
+ * búsqueda sigue. Un bloqueo sí detiene la plataforma.
+ */
+async function fetchDetailOrSkip(
+	adapter: PlatformAdapter,
+	posting: RawPosting,
+	ctx: SearchContext
+): Promise<Partial<RawPosting>> {
+	try {
+		return await adapter.fetchDetail!(posting, ctx);
+	} catch (err) {
+		if (err instanceof BlockedError) throw err;
+		return {};
+	}
+}
+
 function shuffle<T>(items: T[]): T[] {
 	const copy = [...items];
 	for (let i = copy.length - 1; i > 0; i--) {
@@ -74,15 +93,27 @@ async function runPlatform(adapter: PlatformAdapter, p: PlatformProgress, keywor
 	const runId = startRun(adapter.id);
 	const client = createClient(adapter.delay);
 	const seen = new Set<string>();
+	// detalles ya pedidos en esta corrida: una vacante descartada para una palabra puede servir para otra
+	const details = new Map<string, Partial<RawPosting>>();
 
 	try {
 		for (const keyword of shuffle(keywords)) {
 			p.term = keyword.term;
-			for await (const posting of adapter.search(keyword.term, { client, location, since: sinceFor(keyword, lastRun) })) {
+			const ctx = { client, location, since: sinceFor(keyword, lastRun) };
+			for await (const posting of adapter.search(keyword.term, ctx)) {
 				if (seen.has(posting.externalId)) continue;
+				// el detalle cuesta una petición más: solo para las que no están en la base
+				let detail = details.get(posting.externalId) ?? {};
+				if (adapter.fetchDetail && !details.has(posting.externalId) && !postingExists(adapter.id, posting.externalId)) {
+					detail = await fetchDetailOrSkip(adapter, posting, ctx);
+					details.set(posting.externalId, detail);
+				}
+				const full = { ...posting, ...detail };
+				if (adapter.looseSearch && !mentionsTerm(`${full.title}\n${full.description ?? ''}`, keyword.term)) continue;
+
 				seen.add(posting.externalId);
 				p.found++;
-				if (savePosting(adapter.id, posting)) p.created++;
+				if (savePosting(adapter.id, full)) p.created++;
 			}
 			p.done++;
 		}

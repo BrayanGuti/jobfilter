@@ -9,6 +9,7 @@
 ## Checklist
 
 - [ ] `bun run check` pasa sin errores ni warnings
+- [ ] `bun run test` pasa (y si toqué un parser, agregué o actualicé sus tests y fixtures)
 - [ ] Lo probé en la app (`bun run dev`) o con `bun run buscar`
 - [ ] Si cambié el esquema: incluí la migración de `bun run db:generate`
 - [ ] Si agregué una plataforma: sin login, con pausas entre peticiones, una segunda búsqueda no duplica y respeta ubicación e idioma

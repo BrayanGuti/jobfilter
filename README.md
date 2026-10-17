@@ -53,8 +53,9 @@ JobFilter hace esa parte por ti. Tú solo decides a cuáles aplicar.
 | | Plataforma | |
 |---|---|---|
 | ✅ | GetOnBoard | Integrada |
-| 🔜 | Computrabajo | Siguiente |
-| ⏳ | LinkedIn, elempleo, Torre, PeakU, Hireline, Magneto365 | Pendientes |
+| ✅ | Computrabajo | Integrada, en 17 países de Latinoamérica |
+| 🔜 | LinkedIn | Siguiente |
+| ⏳ | elempleo, Torre, PeakU, Hireline, Magneto365 | Pendientes |
 
 El estado de cada una, lo que se sabe de cómo integrarla y la guía para agregar una nueva
 están en [docs/plataformas.md](docs/plataformas.md). **Es la mejor forma de contribuir.**
@@ -95,6 +96,7 @@ IA.
 | `bun run dev` | Arranca la app con Bun (usa `bun:sqlite`) y abre el navegador. |
 | `bun run dev:node` | Igual, con Node (usa `better-sqlite3`). |
 | `bun run buscar` | La misma búsqueda del botón, desde la terminal. |
+| `bun run test` | Tests de los parsers contra respuestas reales guardadas. |
 | `bun run check` | Revisa los tipos. |
 | `bun run db:generate` | Genera una migración después de cambiar el esquema. |
 
@@ -113,10 +115,10 @@ IA.
 - [x] Lista negra automática, bloqueo manual y lista blanca
 - [x] Mapa de calor según tu perfil
 - [x] Integración con GetOnBoard
-- [ ] Computrabajo
+- [x] Computrabajo (17 países)
 - [ ] LinkedIn (sin login)
 - [ ] elempleo, Torre, PeakU, Hireline y Magneto365
-- [ ] Más países además de Colombia en las plataformas que lo separan por dominio
+- [ ] Lista negra para empresas confidenciales (agrupadas por descripción)
 
 ## Contribuir
 

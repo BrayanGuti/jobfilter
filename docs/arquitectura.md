@@ -16,17 +16,18 @@ src/lib/server/
     schema.ts          tablas (Drizzle)
   shared/
     http.ts            cliente HTTP: pausas aleatorias, reintentos, detección de bloqueos
-    normalize.ts       normalización de textos, títulos y empresas
+    normalize.ts       normalización de textos, títulos, empresas y entidades HTML
     profile.ts         lectura de profile/
+    relative-date.ts   "Hace 3 días" → fecha
   features/
     search/
       commands/start-search.ts           el botón Buscar
       queries/get-search-progress.ts     el avance que muestra la página
-      adapters/                          una plataforma por archivo
+      adapters/                          una plataforma por archivo, con sus tests
       run-log.ts, state.ts               internos del slice
     postings/
       commands/  save-posting, mark-applied, discard-posting, retake-posting
-      queries/   list-new-postings, list-discarded, count-discarded
+      queries/   list-new-postings, list-discarded, count-discarded, posting-exists
     companies/
       commands/  recalculate-blacklist, block-company, whitelist-company, unlist-company
       queries/   list-companies, count-blacklisted
@@ -89,8 +90,15 @@ avance se guarda en memoria (`state.ts`) y la página lo consulta cada segundo p
 `/api/buscar`.
 
 Cada plataforma es un **adapter** que solo traduce su formato a `RawPosting` y aplica el
-filtro de ubicación e idioma. Todo lo demás (guardar, deduplicar, lista negra) es común. Ver
-[plataformas.md](plataformas.md) para agregar una.
+filtro de ubicación e idioma. Si su listado no trae la descripción, implementa `fetchDetail`
+y la búsqueda lo llama solo para las vacantes nuevas. Todo lo demás (guardar, deduplicar,
+lista negra) es común. Ver [plataformas.md](plataformas.md) para agregar una.
+
+## Tests
+
+`bun run test` corre los tests de los parsers (`*.test.ts` junto a cada adapter) contra
+respuestas reales guardadas en `fixtures/<plataforma>/`. No hacen peticiones a las
+plataformas. El CI corre los tests y la revisión de tipos en cada PR.
 
 ## Interfaz
 
