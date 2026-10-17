@@ -26,17 +26,15 @@ export function savePosting(platform: string, p: RawPosting): boolean {
 		.get();
 
 	if (existing) {
-		db.update(postings)
-			.set({
-				lastSeenAt: now,
-				url: p.url,
-				title: p.title,
-				publishedAt: sql`max(${postings.publishedAt}, ${publishedAt})`,
-				publishedRaw: p.publishedRaw
-			})
-			.where(eq(postings.id, existing.id))
-			.run();
-		db.insert(publications).values({ postingId: existing.id, publishedAt }).onConflictDoNothing().run();
+		db.update(postings).set({ lastSeenAt: now, url: p.url, title: p.title }).where(eq(postings.id, existing.id)).run();
+		// una fecha aproximada ("Más de 30 días") cambia cada día: no es una republicación
+		if (!p.publishedApprox) {
+			db.update(postings)
+				.set({ publishedAt: sql`max(${postings.publishedAt}, ${publishedAt})`, publishedRaw: p.publishedRaw })
+				.where(eq(postings.id, existing.id))
+				.run();
+			db.insert(publications).values({ postingId: existing.id, publishedAt }).onConflictDoNothing().run();
+		}
 		return false;
 	}
 

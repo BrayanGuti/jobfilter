@@ -44,7 +44,7 @@ JobFilter does that part for you. You only decide where to apply.
   disappears from your list, with the reason and the evidence shown. It recognizes the same
   opening even when the title changes or the text gets reworded.
 - 🌡️ **Fit heat map.** Every posting gets a color based on how much of what it asks for you
-  have: green, orange or red. You see at a glance which technologies you have and which you
+  have: green, orange or red, and the list is sorted from best to worst fit. You see at a glance which technologies you have and which you
   lack.
 - ⭐ **One per company.** When a company has several postings in your list, the best fit is
   starred.
@@ -56,7 +56,7 @@ JobFilter does that part for you. You only decide where to apply.
 
 ## Platforms
 
-✅ GetOnBoard · 🔜 Computrabajo · ⏳ LinkedIn, elempleo, Torre, PeakU, Hireline, Magneto365
+✅ GetOnBoard · ✅ Computrabajo (17 Latin American countries) · 🔜 LinkedIn · ⏳ elempleo, Torre, PeakU, Hireline, Magneto365
 
 See [docs/plataformas.md](docs/plataformas.md) (Spanish) for each platform's status, what's
 known about integrating it, and a step-by-step guide to add a new one. **That's the best way

@@ -38,6 +38,8 @@ detalle está en [docs/arquitectura.md](docs/arquitectura.md).
 ## Convenciones
 
 - **TypeScript estricto.** `bun run check` tiene que pasar sin errores ni warnings.
+- **Tests de los parsers.** Cada adapter tiene su `<plataforma>.test.ts` que prueba el parseo
+  contra los `fixtures/`, sin peticiones reales. `bun run test` tiene que pasar.
 - **Identificadores en inglés; textos de la interfaz, comentarios y docs en español.**
 - **Base de datos solo con Drizzle.** Si cambias `src/lib/server/db/schema.ts`, corre
   `bun run db:generate` e incluye la migración en el PR. No edites migraciones ya publicadas.
@@ -65,7 +67,7 @@ refactor: mover el cálculo de encaje a su propio slice
 1. Crea una rama desde `main` (`feat/computrabajo`, `fix/filtro-idioma`…).
 2. Haz cambios pequeños y enfocados: un PR, un tema.
 3. Verifica:
-   - `bun run check` pasa.
+   - `bun run check` y `bun run test` pasan.
    - Probaste el cambio en la app (`bun run dev`) o con `bun run buscar` si toca la búsqueda.
    - Si agregaste una plataforma: una segunda búsqueda no trae duplicados y los filtros de
      ubicación e idioma funcionan.

@@ -20,6 +20,8 @@ export type NewPosting = {
 	sameCompany: { total: number; isBest: boolean } | null;
 };
 
+const percent = (m: Match) => (m.score === null ? -1 : Math.round(m.score * 100));
+
 /** La lista principal: vacantes sin marcar de empresas que no están en lista negra. */
 export function listNewPostings(): NewPosting[] {
 	const rows = db
@@ -42,7 +44,10 @@ export function listNewPostings(): NewPosting[] {
 		.where(and(eq(postings.status, 'nueva'), sql`${companies.list} IS NOT 'negra'`))
 		.orderBy(desc(postings.publishedAt))
 		.all()
-		.map(({ description, ...p }) => ({ ...p, match: matchPosting(p.title, description) }));
+		.map(({ description, ...p }) => ({ ...p, match: matchPosting(p.title, description) }))
+		// primero las más compatibles (el % que se ve en pantalla), y a igual % la más nueva,
+		// sin importar la plataforma; las que no mencionan tecnologías van al final
+		.sort((a, b) => percent(b.match) - percent(a.match));
 
 	// Varias vacantes de una misma empresa: se marca la que mejor encaja contigo, salvo que
 	// la mejor sea roja (si todas son rojas, ninguna vale la pena).

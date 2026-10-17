@@ -13,8 +13,13 @@
    país**, o **presenciales/híbridas en tu ciudad**, y solo en los idiomas que aceptas.
 3. Guarda cada vacante con su **fecha de publicación** y **quién la publica**, y registra
    cada fecha de publicación distinta (así se detectan las republicaciones).
-4. La misma vacante encontrada con varias palabras clave es una sola fila.
-5. Al terminar, recalcula la lista negra (ver abajo).
+4. La misma vacante encontrada con varias palabras clave es una sola fila. En plataformas que
+   buscan por sinónimos (como Computrabajo), solo se guardan las vacantes que mencionan la
+   búsqueda (sus palabras en orden y cerca).
+5. En las plataformas cuyo listado no trae la descripción (como Computrabajo), se pide la
+   página de cada vacante **solo la primera vez que aparece**. Por eso la primera búsqueda
+   tarda bastante más que las siguientes.
+6. Al terminar, recalcula la lista negra (ver abajo).
 
 Las plataformas corren en paralelo; dentro de cada una, las peticiones van de a una.
 
@@ -33,6 +38,8 @@ encaje = tecnologías pedidas que tienes / tecnologías pedidas reconocidas
 - Debajo del título se ven las que tienes (verde) y las que no (✗ en rojo).
 - Las tecnologías genéricas (SQL, Git, REST, CI/CD, HTML/CSS) se dejan fuera a propósito: las
   piden casi todas las vacantes y hacían que cualquier cosa saliera verde.
+- La lista se ordena por este porcentaje (100% primero) y, a igual porcentaje, por fecha de
+  publicación, sin importar la plataforma. Las grises van al final.
 - Si una empresa tiene varias vacantes en tu lista, la de mejor encaje lleva **★ la mejor de
   N**. Si todas son rojas, ninguna lleva ★.
 
@@ -53,6 +60,8 @@ Cuando publica **la misma vacante 3 o más veces dentro de 3 meses**.
   <fecha>"**.
 - Publicaciones a menos de **7 días** entre sí cuentan como una sola (por ejemplo, la misma
   vacante en dos plataformas o en dos versiones el mismo día).
+- Las fechas que son solo un tope ("Más de 30 días") no cuentan: cambiarían cada día y
+  parecerían republicaciones.
 
 ### Qué es "la misma vacante"
 
