@@ -40,7 +40,8 @@ JobFilter hace esa parte por ti. Tú solo decides a cuáles aplicar.
   meses, desaparece de tu lista, con el motivo y la evidencia a la vista. Reconoce la misma
   vacante aunque cambien el título o retoquen el texto.
 - 🌡️ **Mapa de calor.** Cada vacante tiene un color según qué parte de lo que pide tienes:
-  verde, naranja o rojo. Ves de un vistazo qué tecnologías tienes y cuáles te faltan.
+  verde, naranja o rojo, y la lista se ordena de la más compatible a la menos. Ves de un
+  vistazo qué tecnologías tienes y cuáles te faltan.
 - ⭐ **Una por empresa.** Si una empresa tiene varias vacantes en tu lista, marca la que mejor
   encaja contigo.
 - ✋ **Tú decides.** Apliqué, Descarto, Bloquear empresa, lista blanca y retomar descartadas.

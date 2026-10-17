@@ -6,6 +6,8 @@ Todos los cambios relevantes del proyecto se documentan aquí. El formato sigue
 
 ## [Sin publicar]
 
+## [0.2.0] - 2026-10-17
+
 ### Agregado
 
 - Integración con **Computrabajo**: busca en tu ciudad y en remoto con cada palabra clave, usa
@@ -24,6 +26,12 @@ Todos los cambios relevantes del proyecto se documentan aquí. El formato sigue
   como republicación.
 - Tests de los parsers con `bun test`, contra respuestas reales guardadas en `fixtures/`. El CI
   también los corre.
+
+### Cambiado
+
+- La lista se ordena por compatibilidad con tu perfil (100% primero) y, a igual porcentaje, por
+  fecha de publicación, sin importar la plataforma. Las vacantes sin tecnologías reconocidas
+  van al final.
 
 ## [0.1.0] - 2026-10-14
 
@@ -47,5 +55,6 @@ Primera versión.
   arrancar.
 - Modo oscuro automático.
 
-[Sin publicar]: https://github.com/SebastianAsprino/jobfilter/compare/v0.1.0...HEAD
+[Sin publicar]: https://github.com/SebastianAsprino/jobfilter/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/SebastianAsprino/jobfilter/releases/tag/v0.1.0

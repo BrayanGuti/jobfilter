@@ -44,7 +44,7 @@ JobFilter does that part for you. You only decide where to apply.
   disappears from your list, with the reason and the evidence shown. It recognizes the same
   opening even when the title changes or the text gets reworded.
 - 🌡️ **Fit heat map.** Every posting gets a color based on how much of what it asks for you
-  have: green, orange or red. You see at a glance which technologies you have and which you
+  have: green, orange or red, and the list is sorted from best to worst fit. You see at a glance which technologies you have and which you
   lack.
 - ⭐ **One per company.** When a company has several postings in your list, the best fit is
   starred.

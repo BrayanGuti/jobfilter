@@ -38,6 +38,8 @@ encaje = tecnologías pedidas que tienes / tecnologías pedidas reconocidas
 - Debajo del título se ven las que tienes (verde) y las que no (✗ en rojo).
 - Las tecnologías genéricas (SQL, Git, REST, CI/CD, HTML/CSS) se dejan fuera a propósito: las
   piden casi todas las vacantes y hacían que cualquier cosa saliera verde.
+- La lista se ordena por este porcentaje (100% primero) y, a igual porcentaje, por fecha de
+  publicación, sin importar la plataforma. Las grises van al final.
 - Si una empresa tiene varias vacantes en tu lista, la de mejor encaje lleva **★ la mejor de
   N**. Si todas son rojas, ninguna lleva ★.
 
