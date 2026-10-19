@@ -6,6 +6,25 @@ Todos los cambios relevantes del proyecto se documentan aquí. El formato sigue
 
 ## [Sin publicar]
 
+### Agregado
+
+- Integración con **LinkedIn Empleos** por el endpoint público de invitados: sin login ni
+  cookies, así que no hay cuenta que se pueda bloquear. Busca remoto en tu país y en tu
+  ciudad, y pide la descripción completa (con nivel y tipo de empleo) solo de las vacantes
+  nuevas.
+- **Cupo de peticiones por búsqueda** (`maxRequestsPerRun`) para plataformas que limitan
+  mucho: LinkedIn hace 25 por búsqueda, con pausas de 15 a 25 segundos, y cada búsqueda
+  avanza unas palabras clave.
+- **Pausa por bloqueo configurable por plataforma** (`pauseHours`): LinkedIn se pausa 2 horas,
+  porque su límite se resetea en minutos; las demás siguen en 24.
+- **Cursor por palabra clave**: cada palabra recuerda cuándo se buscó completa, así una
+  búsqueda cortada por el cupo sigue la próxima vez desde donde quedó.
+- **Caché de detalles**: la descripción de cada vacante se pide una sola vez, aunque se
+  descarte, y los filtros se vuelven a aplicar sobre la copia guardada.
+- **Filtro de idioma** por la descripción, para todas las plataformas: si tu perfil solo acepta
+  español, se descartan las vacantes en inglés aunque la plataforma no diga el idioma.
+- LinkedIn bloquea con el código propio `999`: ahora también pausa la plataforma.
+
 ## [0.2.0] - 2026-10-17
 
 ### Agregado

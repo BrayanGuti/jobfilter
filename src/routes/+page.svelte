@@ -105,6 +105,8 @@
 						<span class="muted" title={p.detail}>error: {p.detail}</span>
 					{:else if p.state === 'pendiente'}
 						<span class="muted">en espera</span>
+					{:else if p.state === 'ok' && p.detail}
+						<span class="muted">{p.detail}</span>
 					{/if}
 					{#if p.state !== 'pendiente' && p.state !== 'pausada'}
 						<span class="count">{p.created} nuevas</span>

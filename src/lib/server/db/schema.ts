@@ -94,3 +94,33 @@ export const platforms = sqliteTable('platforms', {
 	pausedUntil: text('paused_until'),
 	failures: integer('failures').notNull().default(0)
 });
+
+/**
+ * Detalle ya pedido de cada vacante, aunque se haya descartado (idioma, relevancia): así no
+ * se vuelve a pedir en cada búsqueda.
+ */
+export const detailCache = sqliteTable(
+	'detail_cache',
+	{
+		platform: text('platform').notNull(),
+		externalId: text('external_id').notNull(),
+		description: text('description'),
+		fetchedAt: text('fetched_at').notNull()
+	},
+	(t) => [primaryKey({ columns: [t.platform, t.externalId] })]
+);
+
+/**
+ * Hasta cuándo se buscó completa cada palabra clave en cada plataforma. Cada palabra avanza
+ * por su cuenta: si una búsqueda se corta por el cupo de peticiones, las que faltaron siguen
+ * en la próxima desde donde quedaron.
+ */
+export const keywordCursors = sqliteTable(
+	'keyword_cursors',
+	{
+		platform: text('platform').notNull(),
+		term: text('term').notNull(),
+		searchedAt: text('searched_at').notNull()
+	},
+	(t) => [primaryKey({ columns: [t.platform, t.term] })]
+);
