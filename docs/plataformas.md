@@ -8,8 +8,8 @@
 | [Computrabajo](https://co.computrabajo.com) | ✅ Integrada | HTML renderizado en el servidor + detalle de cada vacante nueva | — |
 | [LinkedIn](https://www.linkedin.com/jobs) | ✅ Empleos | Endpoint público de invitados (sin login) + detalle, con cupo de peticiones | — |
 | LinkedIn (publicaciones "estamos contratando") | Por decidir | La búsqueda de publicaciones exige sesión; ver abajo | — |
-| [elempleo](https://www.elempleo.com/co/) | 🔜 Siguiente | API interna del sitio | Baja-media |
-| [Torre](https://torre.ai) | Pendiente | API de búsqueda (el formato cambió, hay que redescubrirlo) | Media |
+| [elempleo](https://www.elempleo.com/co/) | ✅ Integrada | API JSON del sitio con token de la sesión anónima | — |
+| [Torre](https://torre.ai) | 🔜 Siguiente | API de búsqueda (el formato cambió, hay que redescubrirlo) | Media |
 | [PeakU](https://peaku.co) | Pendiente | Estado embebido en el HTML (Nuxt) | Media |
 | [Hireline](https://hireline.io/co) | Pendiente | HTML | Media |
 | [Magneto365](https://www.magneto365.com/co) | Pendiente | API interna o `__NEXT_DATA__`; navegador headless si no queda otra | Media-alta |
@@ -74,8 +74,23 @@ Sondeo hecho sin login y con un User-Agent de navegador (octubre de 2026):
     "Director Técnico Farmacéutico". El adapter declara `looseSearch: true` y la búsqueda
     solo guarda las que mencionan el término en el título o la descripción, con sus palabras
     en orden y cerca (en una prueba real, eso descartó 148 de 180).
-- **elempleo**: el sitio llama a `api/joboffers/findbyfilter` (búsqueda) y
-  `api/joboffers/getjoboffer` (detalle).
+- **elempleo** (solo Colombia): la página de ofertas renderiza las primeras 20 vacantes, pero
+  pagina con su API JSON. El adapter usa esa API:
+  - `GET https://www.elempleo.com/co/ofertas-empleo/` trae el token antifalsificación (input
+    `__RequestVerificationToken` dentro de `.js-search-api-token`), una cookie de sesión
+    anónima y la lista de ciudades con su id (`data-cities-val`; Barranquilla = 2,
+    Bogotá = 34). Una vez por búsqueda.
+  - `POST https://www.elempleo.com/co/api/joboffers/findbyfilter` con el token en el header
+    `__RequestVerificationToken` y un JSON con `query`, `workModality` (101 = remoto),
+    `cities` (ids), `publishDate` (1 = hoy y ayer, 2 = una semana, 3 = dos semanas, 4 = un
+    mes), `pageIndex`, `pageSize` (20, 50 o 100) y `sortExpression: "PublishDate_Desc"`.
+  - Cada resultado trae id, título, empresa (`notConfidential: false` = confidencial), ciudad,
+    modalidad (`idworkmodalitytxt`), fecha exacta (`publishDate`), URL y la descripción
+    completa. No hace falta pedir detalle.
+  - Busca por palabras sueltas ("desarrollador fullstack" da cerca de 500 resultados) y
+    guarda vacantes de hasta 5 meses atrás: se filtran por relevancia y por fecha.
+  - La página trae un formulario con reCAPTCHA: no es un desafío, y el detector de captcha ya
+    lo distingue.
 - **PeakU**: Nuxt con SSR; el estado de la página viene en `window.__NUXT__`.
 - **Hireline**: páginas `https://hireline.io/co/empleos-de-<texto>` en HTML.
 - **Magneto365**: Next.js. `/co/empleos` responde, pero las rutas de búsqueda probadas dieron

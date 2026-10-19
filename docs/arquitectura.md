@@ -15,7 +15,8 @@ src/lib/server/
     client.ts          elige el driver según el runtime y aplica las migraciones
     schema.ts          tablas (Drizzle)
   shared/
-    http.ts            cliente HTTP: pausas aleatorias, reintentos, detección de bloqueos
+    http.ts            cliente HTTP: pausas aleatorias, reintentos, cookies de sesión anónima,
+                       detección de bloqueos
     normalize.ts       normalización de textos, títulos, empresas y entidades HTML
     profile.ts         lectura de profile/
     language.ts        idioma de una descripción (es / en)

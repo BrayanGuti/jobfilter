@@ -56,8 +56,9 @@ JobFilter hace esa parte por ti. Tú solo decides a cuáles aplicar.
 | ✅ | GetOnBoard | Integrada |
 | ✅ | Computrabajo | Integrada, en 17 países de Latinoamérica |
 | ✅ | LinkedIn | Empleos, sin login |
-| 🔜 | elempleo | Siguiente |
-| ⏳ | Torre, PeakU, Hireline, Magneto365 | Pendientes |
+| ✅ | elempleo | Integrada (Colombia) |
+| 🔜 | Torre | Siguiente |
+| ⏳ | PeakU, Hireline, Magneto365 | Pendientes |
 
 El estado de cada una, lo que se sabe de cómo integrarla y la guía para agregar una nueva
 están en [docs/plataformas.md](docs/plataformas.md). **Es la mejor forma de contribuir.**
@@ -120,7 +121,8 @@ IA.
 - [x] Computrabajo (17 países)
 - [x] LinkedIn Empleos (sin login)
 - [ ] Publicaciones de LinkedIn ("estamos contratando")
-- [ ] elempleo, Torre, PeakU, Hireline y Magneto365
+- [x] elempleo
+- [ ] Torre, PeakU, Hireline y Magneto365
 - [ ] Lista negra para empresas confidenciales (agrupadas por descripción)
 
 ## Contribuir
