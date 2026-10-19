@@ -110,6 +110,7 @@ marcadas con ⟲.
 - **Incremental**: después de la primera búsqueda solo se pide lo nuevo.
 - **Pausa automática**: si una plataforma responde 429, 403, 999 (LinkedIn) o un captcha, queda en pausa 24 h
   (y el doble si se repite, hasta 7 días). Las demás siguen.
-- Headers de navegador real y palabras clave en orden aleatorio.
+- Headers de navegador real, cookies de la sesión anónima que mande cada sitio durante la
+  búsqueda, y palabras clave empezando por las que llevan más tiempo sin buscarse.
 
 Aplicar lo haces tú, con tu cuenta y desde tu navegador.

@@ -6,6 +6,20 @@ Todos los cambios relevantes del proyecto se documentan aquí. El formato sigue
 
 ## [Sin publicar]
 
+### Agregado
+
+- Integración con **elempleo** (Colombia) por la API JSON que usa el propio sitio: busca remoto
+  y en tu ciudad con filtros de modalidad, ciudad y fecha, 100 vacantes por página. La
+  descripción viene completa en el listado, así que no pide detalle por vacante.
+- El cliente HTTP guarda las **cookies de la sesión anónima** que manda cada sitio y las
+  devuelve durante la misma búsqueda (elempleo las necesita junto a su token).
+
+### Corregido
+
+- El detector de captcha confundía un formulario con reCAPTCHA dentro de una página normal con
+  un desafío. Ahora reCAPTCHA y hCaptcha solo cuentan en páginas cortas, como son los desafíos
+  reales; las marcas de Cloudflare siguen contando siempre.
+
 ## [0.3.0] - 2026-10-19
 
 ### Agregado
