@@ -9,6 +9,10 @@
      recién agregada sí busca sus 3 meses.
    - Algunas plataformas no muestran 3 meses hacia atrás. En ese caso se trae lo que haya y
      el historial se completa con el uso.
+   - Cada palabra clave recuerda cuándo se buscó completa en cada plataforma. Las plataformas
+     que limitan mucho (LinkedIn) tienen un cupo de peticiones por búsqueda: al llegar, se
+     detienen y las palabras que faltaron siguen en la próxima búsqueda, empezando por las que
+     llevan más tiempo sin buscarse.
 2. Cada adapter filtra por tu `profile/location.json`: vacantes **remotas abiertas a tu
    país**, o **presenciales/híbridas en tu ciudad**, y solo en los idiomas que aceptas.
 3. Guarda cada vacante con su **fecha de publicación** y **quién la publica**, y registra
@@ -16,10 +20,12 @@
 4. La misma vacante encontrada con varias palabras clave es una sola fila. En plataformas que
    buscan por sinónimos (como Computrabajo), solo se guardan las vacantes que mencionan la
    búsqueda (sus palabras en orden y cerca).
-5. En las plataformas cuyo listado no trae la descripción (como Computrabajo), se pide la
-   página de cada vacante **solo la primera vez que aparece**. Por eso la primera búsqueda
-   tarda bastante más que las siguientes.
-6. Al terminar, recalcula la lista negra (ver abajo).
+5. En las plataformas cuyo listado no trae la descripción (Computrabajo, LinkedIn), se pide la
+   página de cada vacante **solo la primera vez que aparece**, y queda guardada aunque la
+   vacante se descarte. Por eso la primera búsqueda tarda bastante más que las siguientes.
+6. Con la descripción se detecta el **idioma**: si tu perfil no acepta inglés, se descartan
+   las vacantes en inglés aunque la plataforma no lo indique.
+7. Al terminar, recalcula la lista negra (ver abajo).
 
 Las plataformas corren en paralelo; dentro de cada una, las peticiones van de a una.
 
@@ -102,7 +108,7 @@ marcadas con ⟲.
 - **Sin login**: el script nunca inicia sesión. Si no hay cuenta, no hay cuenta que bloquear.
 - **Poco volumen**: una petición a la vez por plataforma, con pausas aleatorias entre ellas.
 - **Incremental**: después de la primera búsqueda solo se pide lo nuevo.
-- **Pausa automática**: si una plataforma responde 429, 403 o un captcha, queda en pausa 24 h
+- **Pausa automática**: si una plataforma responde 429, 403, 999 (LinkedIn) o un captcha, queda en pausa 24 h
   (y el doble si se repite, hasta 7 días). Las demás siguen.
 - Headers de navegador real y palabras clave en orden aleatorio.
 

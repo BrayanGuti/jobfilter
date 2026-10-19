@@ -42,6 +42,13 @@ export interface PlatformAdapter {
 	 * búsqueda descarta las vacantes cuyo título y descripción no mencionan el término.
 	 */
 	looseSearch?: boolean;
+	/**
+	 * Máximo de peticiones por búsqueda, para plataformas que limitan mucho (LinkedIn). Al
+	 * llegar, la búsqueda se detiene y las palabras que faltaron siguen en la próxima.
+	 */
+	maxRequestsPerRun?: number;
+	/** Horas de pausa ante el primer bloqueo (se duplican si se repite). Por defecto, 24. */
+	pauseHours?: number;
 	search(term: string, ctx: SearchContext): AsyncGenerator<RawPosting>;
 	/**
 	 * Para plataformas cuyo listado no trae la descripción: la búsqueda lo llama solo con las

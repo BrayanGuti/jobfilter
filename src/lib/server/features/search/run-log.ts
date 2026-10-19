@@ -1,7 +1,7 @@
 // Bitácora de corridas y pausas por plataforma. Uso interno del slice de búsqueda.
 import { and, eq, isNotNull, isNull, max, sql } from 'drizzle-orm';
 import { db } from '$lib/server/db/client';
-import { platforms, runs } from '$lib/server/db/schema';
+import { keywordCursors, platforms, runs } from '$lib/server/db/schema';
 
 const now = () => new Date().toISOString();
 
@@ -31,15 +31,15 @@ export function pausedUntil(platform: string): string | null {
 	return row?.pausedUntil && row.pausedUntil > now() ? row.pausedUntil : null;
 }
 
-/** Pausa 24 h la primera vez y duplica en cada bloqueo seguido (máx. 7 días). */
-export function pausePlatform(platform: string): string {
+/** Pausa `baseHours` la primera vez y duplica en cada bloqueo seguido (máx. 7 días). */
+export function pausePlatform(platform: string, baseHours = 24): string {
 	const { failures } = db
 		.insert(platforms)
 		.values({ id: platform, failures: 1 })
 		.onConflictDoUpdate({ target: platforms.id, set: { failures: sql`${platforms.failures} + 1` } })
 		.returning({ failures: platforms.failures })
 		.get()!;
-	const hours = Math.min(24 * 2 ** (failures - 1), 24 * 7);
+	const hours = Math.min(baseHours * 2 ** (failures - 1), 24 * 7);
 	const until = new Date(Date.now() + hours * 3_600_000).toISOString();
 	db.update(platforms).set({ pausedUntil: until }).where(eq(platforms.id, platform)).run();
 	return until;
@@ -49,5 +49,22 @@ export function clearPlatformFailures(platform: string) {
 	db.insert(platforms)
 		.values({ id: platform, failures: 0 })
 		.onConflictDoUpdate({ target: platforms.id, set: { failures: 0, pausedUntil: null } })
+		.run();
+}
+
+/** Hasta cuándo se buscó completa cada palabra en esta plataforma. */
+export function keywordCursorsFor(platform: string): Map<string, string> {
+	const rows = db
+		.select({ term: keywordCursors.term, searchedAt: keywordCursors.searchedAt })
+		.from(keywordCursors)
+		.where(eq(keywordCursors.platform, platform))
+		.all();
+	return new Map(rows.map((r) => [r.term, r.searchedAt]));
+}
+
+export function setKeywordCursor(platform: string, term: string, searchedAt: string) {
+	db.insert(keywordCursors)
+		.values({ platform, term, searchedAt })
+		.onConflictDoUpdate({ target: [keywordCursors.platform, keywordCursors.term], set: { searchedAt } })
 		.run();
 }

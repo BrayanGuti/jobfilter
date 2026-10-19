@@ -4,7 +4,7 @@ const HEADERS = {
 	'Accept-Language': 'es-CO,es;q=0.9,en;q=0.5'
 };
 
-/** La plataforma nos frenó (429/403/captcha): hay que dejarla en pausa. */
+/** La plataforma nos frenó (429/403/999/captcha): hay que dejarla en pausa. */
 export class BlockedError extends Error {}
 
 class HttpError extends Error {}
@@ -12,6 +12,8 @@ class HttpError extends Error {}
 export type HttpClient = {
 	text(url: string, init?: RequestInit): Promise<string>;
 	json<T>(url: string, init?: RequestInit): Promise<T>;
+	/** Peticiones hechas con este cliente (para el cupo por corrida). */
+	requests(): number;
 };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -22,6 +24,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
  */
 export function createClient(delay: { min: number; max: number }): HttpClient {
 	let last = 0;
+	let count = 0;
 
 	async function request(url: string, init: RequestInit = {}): Promise<Response> {
 		const wait = last + delay.min + Math.random() * (delay.max - delay.min) - Date.now();
@@ -29,13 +32,15 @@ export function createClient(delay: { min: number; max: number }): HttpClient {
 
 		for (let attempt = 1; ; attempt++) {
 			last = Date.now();
+			count++;
 			try {
 				const res = await fetch(url, {
 					...init,
 					headers: { ...HEADERS, ...init.headers },
 					signal: AbortSignal.timeout(30_000)
 				});
-				if (res.status === 429 || res.status === 403) {
+				// 999 es la respuesta propia de LinkedIn cuando bloquea ("Request denied")
+				if (res.status === 429 || res.status === 403 || res.status === 999) {
 					throw new BlockedError(`HTTP ${res.status} en ${url}`);
 				}
 				if (res.status >= 500 && attempt < 3) {
@@ -62,6 +67,7 @@ export function createClient(delay: { min: number; max: number }): HttpClient {
 		},
 		async json(url, init) {
 			return (await request(url, init)).json();
-		}
+		},
+		requests: () => count
 	};
 }

@@ -18,13 +18,14 @@ src/lib/server/
     http.ts            cliente HTTP: pausas aleatorias, reintentos, detección de bloqueos
     normalize.ts       normalización de textos, títulos, empresas y entidades HTML
     profile.ts         lectura de profile/
+    language.ts        idioma de una descripción (es / en)
     relative-date.ts   "Hace 3 días" → fecha
   features/
     search/
       commands/start-search.ts           el botón Buscar
       queries/get-search-progress.ts     el avance que muestra la página
       adapters/                          una plataforma por archivo, con sus tests
-      run-log.ts, state.ts               internos del slice
+      run-log.ts, detail-cache.ts, state.ts   internos del slice
     postings/
       commands/  save-posting, mark-applied, discard-posting, retake-posting
       queries/   list-new-postings, list-discarded, count-discarded, posting-exists
@@ -78,6 +79,8 @@ postings      cada vacante: plataforma, id externo, url, título, empresa, ubica
               fecha de publicación, estado (nueva | aplicada | descartada) y cuántas veces se publicó
 publications  cada fecha de publicación distinta de una vacante (para detectar republicaciones)
 keywords      palabras clave: las del perfil y las agregadas desde la app
+keyword_cursors   hasta cuándo se buscó completa cada palabra en cada plataforma
+detail_cache  descripción ya pedida de cada vacante, aunque se haya descartado
 runs          cada búsqueda por plataforma: encontradas, nuevas, error
 platforms     pausas por bloqueo de cada plataforma
 ```
