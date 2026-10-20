@@ -57,8 +57,10 @@ JobFilter hace esa parte por ti. Tú solo decides a cuáles aplicar.
 | ✅ | Computrabajo | Integrada, en 17 países de Latinoamérica |
 | ✅ | LinkedIn | Empleos, sin login |
 | ✅ | elempleo | Integrada (Colombia) |
-| 🔜 | Torre | Siguiente |
-| ⏳ | PeakU, Hireline, Magneto365 | Pendientes |
+| ✅ | PeakU | Integrada |
+| 🔜 | Hireline | Siguiente |
+| ⏳ | Magneto365 | Pendiente |
+| ⛔ | Torre | Requiere API key (cerró la búsqueda pública) |
 
 El estado de cada una, lo que se sabe de cómo integrarla y la guía para agregar una nueva
 están en [docs/plataformas.md](docs/plataformas.md). **Es la mejor forma de contribuir.**
@@ -122,7 +124,9 @@ IA.
 - [x] LinkedIn Empleos (sin login)
 - [ ] Publicaciones de LinkedIn ("estamos contratando")
 - [x] elempleo
-- [ ] Torre, PeakU, Hireline y Magneto365
+- [x] PeakU
+- [ ] Hireline y Magneto365
+- [ ] Torre, si se consigue acceso a su API
 - [ ] Lista negra para empresas confidenciales (agrupadas por descripción)
 
 ## Contribuir
