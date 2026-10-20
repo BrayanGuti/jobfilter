@@ -9,9 +9,9 @@
 | [LinkedIn](https://www.linkedin.com/jobs) | ✅ Empleos | Endpoint público de invitados (sin login) + detalle, con cupo de peticiones | — |
 | LinkedIn (publicaciones "estamos contratando") | Por decidir | La búsqueda de publicaciones exige sesión; ver abajo | — |
 | [elempleo](https://www.elempleo.com/co/) | ✅ Integrada | API JSON del sitio con token de la sesión anónima | — |
-| [Torre](https://torre.ai) | 🔜 Siguiente | API de búsqueda (el formato cambió, hay que redescubrirlo) | Media |
-| [PeakU](https://peaku.co) | Pendiente | Estado embebido en el HTML (Nuxt) | Media |
-| [Hireline](https://hireline.io/co) | Pendiente | HTML | Media |
+| [Torre](https://torre.ai) | ⛔ Requiere API key | Cerró la búsqueda pública; API oficial en private beta | — |
+| [PeakU](https://peaku.co) | ✅ Integrada | API pública del sitio + JSON-LD de cada vacante | — |
+| [Hireline](https://hireline.io/co) | 🔜 Siguiente | HTML | Media |
 | [Magneto365](https://www.magneto365.com/co) | Pendiente | API interna o `__NEXT_DATA__`; navegador headless si no queda otra | Media-alta |
 | [Talently](https://talently.tech) | Por confirmar | Parece un marketplace donde las empresas te buscan, sin listado público | — |
 
@@ -91,12 +91,33 @@ Sondeo hecho sin login y con un User-Agent de navegador (octubre de 2026):
     guarda vacantes de hasta 5 meses atrás: se filtran por relevancia y por fecha.
   - La página trae un formulario con reCAPTCHA: no es un desafío, y el detector de captcha ya
     lo distingue.
-- **PeakU**: Nuxt con SSR; el estado de la página viene en `window.__NUXT__`.
+- **PeakU**: su web (Nuxt) consume una API pública sin login.
+  - Listado: `GET https://api.peaku.co/api-v2/get-active-jobs?start=<n>&step=<n>&text=<texto>`
+    (también acepta `location_generic_type_codes` y `city_id`). En octubre de 2026 había solo
+    **83 vacantes activas** en total, así que el adapter trae el listado completo una vez por
+    búsqueda (`step=100`) y filtra localmente.
+  - Cada vacante trae `url` (`57876-mobile-application-developer…`, el número es el id),
+    título, empresa (`confidential`), ciudad, `location_type.code` (`RA` remoto en cualquier
+    lugar, `RC` remoto en el país, `H` híbrido, `OS` presencial), `all_countries` (para `RC`;
+    a veces vacío), habilidades principales y las fechas `created_at` y `last_activated_at`.
+  - Detalle: `https://peaku.co/es/empleos/<url>` trae un JSON-LD `JobPosting` con la
+    descripción en HTML **escapado como entidades** (`&lt;h2&gt;`). Algunas vacantes no lo
+    traen: se guardan sin descripción y el mapa de calor usa solo el título.
+  - El estado `window.__NUXT__` es código JavaScript minificado: no se ejecuta, se usan la API
+    y el JSON-LD.
 - **Hireline**: páginas `https://hireline.io/co/empleos-de-<texto>` en HTML.
 - **Magneto365**: Next.js. `/co/empleos` responde, pero las rutas de búsqueda probadas dieron
   500. Hay que mirar las peticiones del sitio desde el navegador.
-- **Torre**: el endpoint conocido (`POST https://search.torre.co/opportunities/_search`)
-  responde "Invalid request": cambió el formato del cuerpo.
+- **Torre**: cerró su búsqueda pública (verificado en octubre de 2026).
+  - `POST https://search.torre.co/opportunities/_search/` responde 400 "Invalid request" a
+    cualquier cuerpo, incluso `{}`. La comunidad lo usaba hasta julio de 2026
+    ([torre-cli](https://github.com/jjuanrivvera/torre-cli)).
+  - Su web nueva es una app Flutter con sesión: busca en
+    `/api/search/opportunities/_search` con el id del usuario (`X-Torre-GgId`) y paginación
+    por cursor (`after`/`before`).
+  - La API oficial está en private beta, con acceso por solicitud y claves desde la cuenta
+    ([torre.ai/apiforcandidates](https://torre.ai/apiforcandidates)). Si se consigue una
+    clave, se puede integrar leyéndola de un archivo local fuera de git.
 - **Talently**: `/empleos`, `/ofertas` y `/jobs` dan 404.
 
 ## Agregar una plataforma

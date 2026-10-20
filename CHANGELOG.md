@@ -6,6 +6,22 @@ Todos los cambios relevantes del proyecto se documentan aquí. El formato sigue
 
 ## [Sin publicar]
 
+## [0.5.0] - 2026-10-20
+
+### Agregado
+
+- Integración con **PeakU** por la API pública que usa su sitio. Como tiene pocas vacantes
+  activas (decenas), trae el listado completo una vez por búsqueda y lo filtra por palabra
+  clave (título y habilidades) y ubicación; la descripción sale del JSON-LD de cada vacante
+  nueva. La fecha es la de la última activación: si la empresa reactiva una vacante, cuenta
+  como republicación.
+
+### Cambiado
+
+- **Torre** queda fuera por ahora: cerró su búsqueda pública (el endpoint que usaba la
+  comunidad responde 400 y su web nueva exige sesión) y su API oficial está en private beta
+  con claves. Documentado en `docs/plataformas.md`.
+
 ## [0.4.0] - 2026-10-19
 
 ### Agregado
@@ -92,7 +108,8 @@ Primera versión.
   arrancar.
 - Modo oscuro automático.
 
-[Sin publicar]: https://github.com/SebastianAsprino/jobfilter/compare/v0.4.0...HEAD
+[Sin publicar]: https://github.com/SebastianAsprino/jobfilter/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.1.0...v0.2.0
