@@ -20,7 +20,8 @@ async function open(): Promise<DB> {
 		const { drizzle } = await import('drizzle-orm/bun-sqlite');
 		const { migrate } = await import('drizzle-orm/bun-sqlite/migrator');
 		const sqlite = new Database(DB_PATH, { create: true });
-		sqlite.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
+		// busy_timeout: la app y la terminal pueden escribir a la vez sin fallar al instante
+		sqlite.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;');
 		const db = drizzle(sqlite, { schema });
 		migrate(db, { migrationsFolder: MIGRATIONS });
 		return db as DB;

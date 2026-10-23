@@ -6,6 +6,53 @@ Todos los cambios relevantes del proyecto se documentan aquí. El formato sigue
 
 ## [Sin publicar]
 
+### Agregado
+
+- **Freno para LinkedIn**: apretar Buscar muchas veces ya no se traduce en muchas peticiones.
+  Hay al menos 30 minutos entre corridas de LinkedIn (`minGapMinutes`); mientras tanto se
+  muestra en pausa y las demás plataformas buscan normal. Además, cada palabra clave se busca
+  en LinkedIn como mucho una vez por semana (`refreshEveryHours`): las primeras búsquedas
+  avanzan con las palabras pendientes y, cuando ya están todas, LinkedIn no recibe peticiones
+  hasta que se cumpla la semana.
+
+### Corregido
+
+- **LinkedIn dejaba de responder (429) a las pocas peticiones.** El bloqueo es por volumen de
+  peticiones por IP, no por velocidad, y lo que más cargaba era pedir el detalle de cada
+  vacante. Ahora:
+  - el detalle se pide solo si el título de la tarjeta menciona alguna palabra clave del
+    perfil (`prefilterByTitle`);
+  - el cupo de 25 peticiones por búsqueda es un tope duro: cuenta las páginas de búsqueda y
+    los reintentos (antes podía llegar a 28, o a 40 con reintentos);
+  - ante un 429 espera 75 segundos y reintenta una sola vez para terminar lo que estaba en
+    curso, deja registrada una pausa corta y corta la búsqueda. Si la plataforma ya venía de un
+    bloqueo, no reintenta. El aviso se guarda antes de esperar, así un Ctrl+C no lo borra;
+  - **redirigir al muro de login** (authwall) cuenta como bloqueo: antes se tomaba como "sin
+    resultados", seguía pidiendo y marcaba las palabras como buscadas. LinkedIn ya no sigue
+    redirecciones (`blockRedirects`);
+  - los bloqueos "silenciosos" (200 sin contenido) también frenan: dos detalles sin
+    descripción en la misma búsqueda, o tres palabras seguidas sin ninguna tarjeta, cuentan
+    como bloqueo antes de marcar palabras como buscadas;
+  - 451 también cuenta como bloqueo, y cualquier otro error que corte la búsqueda de LinkedIn
+    la pausa (`pauseOnErrors`); en el detalle solo se ignoran el 404 y el 410;
+  - las pausas suben de a poco: 30 minutos, 2 horas, 8 horas y 1 día (`pauseMinutes`,
+    reemplaza a `pauseHours`). Una búsqueda que sale bien baja un solo escalón, y solo si el
+    último bloqueo fue hace más de un día: un bloqueo y un éxito alternados ya no dejan la
+    escalera siempre abajo;
+  - no le manda cookies (`cookies: false`), como JobSpy;
+  - vuelve a un ritmo normal de 4 a 8 segundos, medidos desde que llega cada respuesta.
+- **Palabras clave sin cursor buscaban solo los últimos días.** Una palabra que nunca se había
+  buscado tomaba como referencia la última corrida de la plataforma aunque la hubiera cortado
+  el cupo, y perdía su ventana de 3 meses. Ahora cada palabra usa solo su propio cursor.
+- **Una palabra cortada por el cupo podía no completarse nunca.** Las palabras se ordenaban al
+  azar; ahora el orden es estable y la que quedó a medias se retoma primero, aprovechando los
+  detalles que ya están en caché.
+- **Dos búsquedas a la vez** (la app y la terminal) podían pasar las dos el intervalo de 30
+  minutos: registrar la corrida ahora es atómico y el intervalo se mide desde el final de la
+  anterior. SQLite espera hasta 5 segundos si la base está ocupada, en vez de fallar.
+- Quitar todas las palabras clave ya no rompe la búsqueda, y una recarga en caliente de la app
+  en desarrollo no pierde el progreso.
+
 ## [0.5.0] - 2026-10-20
 
 ### Agregado

@@ -39,14 +39,35 @@ Sondeo hecho sin login y con un User-Agent de navegador (octubre de 2026):
     exacta (`<time datetime="2026-10-13">`). La URL limpia es `/jobs/view/<id>/`.
   - Detalle: `https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/<id>`, con la
     descripción (`show-more-less-html__markup`) y criterios (nivel, tipo de empleo, sector).
-  - **Límites medidos**: tolera unas 30 peticiones por ventana de 10 a 15 minutos, más o menos
-    rápido, y después responde 429 (también usa el código `999`); el límite se resetea solo.
-    Por eso el adapter va con pausas de 15 a 25 segundos, un cupo de 25 peticiones por
-    búsqueda (`maxRequestsPerRun`) y una pausa de 2 horas ante un bloqueo (`pauseHours`). La
-    primera pasada por todas las palabras clave toma varias búsquedas; después cada palabra
-    solo pide lo nuevo.
-  - En pruebas reales, unas 6 de cada 10 vacantes remotas de Colombia estaban en inglés.
-  - Muchas vacantes están en inglés: las filtra el detector de idioma de la búsqueda.
+  - **Límites**: el bloqueo es por volumen de peticiones por IP, no por velocidad. JobSpy
+    espera 3 a 7 s entre páginas y otros proyectos 2 s sin problemas, mientras que con 15 a
+    25 s igual llegaba el 429: la causa era la cantidad de peticiones (sobre todo de
+    detalle) y las corridas seguidas que reabrían la penalización. Scrapfly midió `999` tras
+    50–60 peticiones en 15 minutos, con o sin cookies. (Investigación de octubre de 2026:
+    [JobSpy](https://github.com/speedyapply/JobSpy),
+    [Scrapfly](https://scrapfly.io/blog/posts/best-linkedin-scrapers-github),
+    [reintentos ante 429](https://github.com/danielcanfly/jobs-scraper/pull/8),
+    [detalle como causa](https://github.com/Uzzoper/job-hunter/issues/99).)
+  - Por eso el adapter:
+    - pide el detalle **solo si el título menciona alguna palabra clave** del perfil
+      (`prefilterByTitle`), porque el detalle es lo que más carga;
+    - no manda cookies (`cookies: false`), igual que JobSpy;
+    - va a 4–8 s entre peticiones (medidos desde cada respuesta), con un cupo duro de 25 por
+      búsqueda que incluye reintentos (`maxRequestsPerRun`);
+    - no sigue redirecciones: una redirección al muro de login (`authwall`) cuenta como
+      bloqueo (`blockRedirects`), igual que un detalle que llega sin descripción;
+    - tiene un freno: al menos 30 minutos entre corridas (`minGapMinutes`) y cada palabra
+      clave como mucho una vez por semana (`refreshEveryHours`);
+    - ante un 429 espera 75 s y reintenta una vez para terminar lo que estaba en curso, y
+      corta la búsqueda con una pausa corta (`blockRetryMs`); si ya venía de un bloqueo, no
+      reintenta. Ante un bloqueo, se pausa 30 minutos, 2 horas, 8 horas y 1 día
+      (`pauseMinutes`), y cualquier otro error también la pausa (`pauseOnErrors`).
+  - No sirven (sin evidencia o con evidencia en contra): cabeceras `csrf-token`, cookies
+    especiales, rotar el User-Agent, imitar la huella del navegador. Usar un navegador no
+    cambia el volumen por IP, que es lo que LinkedIn mide. La página pública `/jobs/view`
+    muestra muro de login a visitantes sin sesión desde octubre de 2026.
+  - Unas 6 de cada 10 vacantes remotas de Colombia están en inglés: las filtra el detector de
+    idioma de la búsqueda.
 - **LinkedIn (publicaciones)**: las publicaciones de reclutadores ("estamos contratando") no
   se pueden buscar sin sesión. Una publicación sí se lee sin login si se tiene su link (trae
   `SocialMediaPosting` en JSON-LD con texto, autor y fecha), pero encontrarlas es el problema:
@@ -179,10 +200,20 @@ Si la plataforma devuelve resultados que no mencionan lo que buscaste (sinónimo
 descripción no mencionan el término (sus palabras en orden y con hasta 2 palabras entre
 una y otra).
 
-Si la plataforma corta rápido con 429 (como LinkedIn), declara `maxRequestsPerRun`: cada
-búsqueda hace como mucho esa cantidad de peticiones y las palabras clave que falten siguen en
-la próxima, gracias al cursor por palabra. Si su límite se resetea rápido, baja también
-`pauseHours` (por defecto 24).
+Si la plataforma corta rápido con 429 (como LinkedIn), tienes estas opciones en el adapter:
+
+- `maxRequestsPerRun`: cada búsqueda hace como mucho esa cantidad de peticiones; las palabras
+  clave que falten siguen en la próxima, gracias al cursor por palabra.
+- `prefilterByTitle`: el detalle se pide solo si el título menciona alguna palabra clave.
+- `blockRetryMs`: ante un 429, esperar y reintentar una vez antes de rendirse.
+- `pauseMinutes`: escalera de pausas ante bloqueos seguidos (por defecto 1 día, 2, 4 y una
+  semana).
+- `cookies: false`: no devolver las cookies de la sesión anónima.
+- `blockRedirects`: no seguir redirecciones; cualquier redirección cuenta como bloqueo.
+- `pauseOnErrors`: cualquier error que corte la búsqueda pausa la plataforma, no solo un
+  bloqueo.
+- `minGapMinutes` y `refreshEveryHours`: freno contra apretar Buscar muchas veces (minutos
+  mínimos entre corridas, y cada cuántas horas se puede volver a buscar cada palabra).
 
 Reglas del adapter:
 

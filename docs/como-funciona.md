@@ -108,8 +108,14 @@ marcadas con ⟲.
 - **Sin login**: el script nunca inicia sesión. Si no hay cuenta, no hay cuenta que bloquear.
 - **Poco volumen**: una petición a la vez por plataforma, con pausas aleatorias entre ellas.
 - **Incremental**: después de la primera búsqueda solo se pide lo nuevo.
-- **Pausa automática**: si una plataforma responde 429, 403, 999 (LinkedIn) o un captcha, queda en pausa 24 h
-  (y el doble si se repite, hasta 7 días). Las demás siguen.
+- **Freno en LinkedIn**: al menos 30 minutos entre corridas, y cada palabra clave como mucho
+  una vez por semana. Apretar Buscar seguido no le hace peticiones; las demás plataformas
+  buscan normal.
+- **Pausa automática**: si una plataforma responde 429, 403, 999 (LinkedIn) o un captcha, queda
+  en pausa: 1 día, y más si se repite (hasta una semana). Una redirección al muro de login
+  también cuenta como bloqueo. LinkedIn, ante un 429, reintenta una vez, corta la búsqueda y
+  queda en pausa corta; ante un bloqueo se pausa 30 minutos, 2 horas, 8 horas y 1 día. Las
+  demás plataformas siguen.
 - Headers de navegador real, cookies de la sesión anónima que mande cada sitio durante la
   búsqueda, y palabras clave empezando por las que llevan más tiempo sin buscarse.
 

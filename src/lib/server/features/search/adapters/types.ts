@@ -47,8 +47,31 @@ export interface PlatformAdapter {
 	 * llegar, la búsqueda se detiene y las palabras que faltaron siguen en la próxima.
 	 */
 	maxRequestsPerRun?: number;
-	/** Horas de pausa ante el primer bloqueo (se duplican si se repite). Por defecto, 24. */
-	pauseHours?: number;
+	/**
+	 * Escalera de pausas ante bloqueos seguidos, en minutos: el primero usa el primer escalón.
+	 * Por defecto: 1 día, 2, 4 y una semana.
+	 */
+	pauseMinutes?: number[];
+	/**
+	 * Freno contra apretar Buscar muchas veces: minutos mínimos entre dos corridas de esta
+	 * plataforma. Mientras tanto se muestra en pausa y las demás plataformas buscan normal.
+	 */
+	minGapMinutes?: number;
+	/** Cada palabra clave se vuelve a buscar en esta plataforma como mucho cada tantas horas. */
+	refreshEveryHours?: number;
+	/** Ante un 429, esperar esto (ms) y reintentar una vez antes de pausar la plataforma. */
+	blockRetryMs?: number;
+	/** Guardar las cookies de la sesión anónima durante la búsqueda (por defecto, sí). */
+	cookies?: boolean;
+	/** No seguir redirecciones: cualquier redirección cuenta como bloqueo (muro de login). */
+	blockRedirects?: boolean;
+	/** Cualquier error que corte la búsqueda (no solo un bloqueo) pausa la plataforma. */
+	pauseOnErrors?: boolean;
+	/**
+	 * Pedir el detalle solo si el título de la tarjeta menciona alguna palabra clave del perfil.
+	 * Para plataformas cuyo detalle es caro (LinkedIn): las que no pasan no gastan petición.
+	 */
+	prefilterByTitle?: boolean;
 	search(term: string, ctx: SearchContext): AsyncGenerator<RawPosting>;
 	/**
 	 * Para plataformas cuyo listado no trae la descripción: la búsqueda lo llama solo con las
