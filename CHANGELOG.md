@@ -6,6 +6,15 @@ Todos los cambios relevantes del proyecto se documentan aquí. El formato sigue
 
 ## [Sin publicar]
 
+### Agregado
+
+- Integración con **Hireline** (Colombia y México). Como tiene pocas vacantes activas por país
+  (unas 30 en Colombia), trae el listado completo una vez por búsqueda, en páginas de 12, y lo
+  filtra por palabra clave (título y resumen) y ubicación: remoto abierto a tu país o a LATAM,
+  o presencial/híbrido en tu ciudad. Del JSON-LD de cada vacante nueva toma el título y la
+  empresa por separado, la fecha exacta y la descripción completa. Si el sitio repitiera una
+  página, deja de paginar.
+
 ## [0.5.1] - 2026-10-22
 
 ### Agregado
