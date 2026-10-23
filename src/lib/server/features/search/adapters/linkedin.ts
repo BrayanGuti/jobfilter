@@ -1,10 +1,10 @@
+import { BlockedError, type HttpClient } from '$lib/server/shared/http';
 import { decodeEntities, htmlToText, normalizeText, samePlace } from '$lib/server/shared/normalize';
 import type { Location } from '$lib/server/shared/profile';
 import type { Modality, PlatformAdapter, RawPosting } from './types';
 
 // Endpoint público de invitados (sin login, sin cookies), el mismo que usa la página de
 // empleos cuando no hay sesión. Devuelve fragmentos HTML de 10 tarjetas.
-// LinkedIn es la plataforma que más limita: pausas largas y pocas páginas por búsqueda.
 const SEARCH = 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search';
 const DETAIL = 'https://www.linkedin.com/jobs-guest/jobs/api/jobPosting';
 const PER_PAGE = 10;
@@ -49,6 +49,13 @@ export function parseDetail(html: string): Partial<RawPosting> {
 	return { description: [htmlToText(markup), ...criteria].join('\n') };
 }
 
+// Señales de un bloqueo "silencioso" (200 sin contenido en vez de un error), contadas por
+// búsqueda (cada búsqueda crea su propio cliente).
+const EMPTY_DETAILS_TO_BLOCK = 2; // detalles sin descripción en la misma búsqueda
+const EMPTY_KEYWORDS_TO_BLOCK = 3; // palabras seguidas sin ninguna tarjeta
+const emptyDetails = new WeakMap<HttpClient, number>();
+const emptyKeywordStreak = new WeakMap<HttpClient, number>();
+
 /** La búsqueda por ciudad trae también ciudades cercanas: se queda con la del perfil o todo el país. */
 function wanted(p: RawPosting, where: Location): boolean {
 	if (p.modality === 'remoto') return true;
@@ -59,12 +66,23 @@ function wanted(p: RawPosting, where: Location): boolean {
 export const linkedin: PlatformAdapter = {
 	id: 'linkedin',
 	name: 'LinkedIn',
-	// medido: tolera unas 30 peticiones por ventana de 10–15 minutos (más o menos rápido) y
-	// después responde 429; el límite se resetea solo. Cupo por búsqueda por debajo de eso
-	// (cada búsqueda avanza unas palabras clave) y pausa corta ante un bloqueo.
-	delay: { min: 15_000, max: 25_000 },
+	// El límite es por volumen de peticiones por IP, no por velocidad: JobSpy usa 3–7 s y otros
+	// 2 s sin problemas (docs/plataformas.md). Lo que más carga es el detalle de cada vacante:
+	// solo se pide si el título menciona alguna palabra clave. Sin cookies, como JobSpy.
+	// Ante un 429, una espera y un reintento; si sigue, pausas cortas que suben de a poco.
+	delay: { min: 4_000, max: 8_000 },
 	maxRequestsPerRun: 25,
-	pauseHours: 2,
+	// freno: al menos 30 minutos entre corridas y cada palabra, como mucho una vez por semana
+	minGapMinutes: 30,
+	refreshEveryHours: 168,
+	prefilterByTitle: true,
+	cookies: false,
+	// LinkedIn manda al muro de login (authwall) con una redirección: eso es un bloqueo
+	blockRedirects: true,
+	pauseOnErrors: true,
+	blockRetryMs: 75_000,
+	// un bloqueo real llegó a durar 8 h: la escalera no vuelve a tocar la IP antes de tiempo
+	pauseMinutes: [30, 120, 480, 1_440],
 	// busca por relevancia: "desarrollador fullstack" trae también vacantes solo parecidas
 	looseSearch: true,
 
@@ -76,6 +94,7 @@ export const linkedin: PlatformAdapter = {
 			{ place: `${location.city}, ${location.country}`, remote: false }
 		];
 
+		let cards = 0;
 		for (const { place, remote } of searches) {
 			for (let page = 0; page < MAX_PAGES; page++) {
 				const params = new URLSearchParams({
@@ -87,15 +106,33 @@ export const linkedin: PlatformAdapter = {
 				if (remote) params.set('f_WT', REMOTE);
 
 				const postings = parseSearchPage(await client.text(`${SEARCH}?${params}`), remote ? 'remoto' : undefined);
+				cards += postings.length;
 				for (const p of postings) {
 					if (p.publishedAt >= since && wanted(p, location)) yield p;
 				}
 				if (postings.length < PER_PAGE) break;
 			}
 		}
+		// una palabra sin resultados es normal; varias seguidas suelen ser un bloqueo que
+		// responde 200 vacío: se para antes de marcar todas como buscadas
+		const streak = cards ? 0 : (emptyKeywordStreak.get(client) ?? 0) + 1;
+		emptyKeywordStreak.set(client, streak);
+		if (streak >= EMPTY_KEYWORDS_TO_BLOCK) {
+			throw new BlockedError(`${streak} palabras seguidas sin ninguna tarjeta: posible bloqueo`);
+		}
 	},
 
 	async fetchDetail(posting, { client }) {
-		return parseDetail(await client.text(`${DETAIL}/${posting.externalId}`));
+		const detail = parseDetail(await client.text(`${DETAIL}/${posting.externalId}`));
+		if (!detail.description) {
+			// una vacante suelta sin descripción (cerrada, otra plantilla) se guarda vacía y no se
+			// vuelve a pedir; dos en la misma búsqueda ya parecen el muro de login
+			const empties = (emptyDetails.get(client) ?? 0) + 1;
+			emptyDetails.set(client, empties);
+			if (empties >= EMPTY_DETAILS_TO_BLOCK) {
+				throw new BlockedError(`${empties} detalles sin descripción (posible muro de login): ${posting.url}`);
+			}
+		}
+		return detail;
 	}
 };

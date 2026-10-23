@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { parseDetail, parseSearchPage } from './linkedin';
+import { BlockedError, createClient } from '$lib/server/shared/http';
+import { linkedin, parseDetail, parseSearchPage } from './linkedin';
 
 const fixture = (name: string) => readFileSync(resolve('fixtures/linkedin', name), 'utf8');
 
@@ -48,5 +49,50 @@ describe('parseDetail', () => {
 
 	test('sin descripción devuelve vacío', () => {
 		expect(parseDetail('<html></html>')).toEqual({});
+	});
+});
+
+describe('fetchDetail', () => {
+	const ctx = (body: string) => ({
+		client: { ...createClient({ min: 0, max: 0 }), text: async () => body },
+		since: new Date(0),
+		location: { country: 'Colombia', city: 'Barranquilla', languages: ['es'] }
+	});
+	const posting = parseSearchPage(fixture('busqueda-remoto.html'), 'remoto')[0];
+
+	test('con descripción la devuelve', async () => {
+		expect((await linkedin.fetchDetail!(posting, ctx(fixture('detalle.html')))).description).toContain('Integral Group Solution');
+	});
+
+	test('un detalle suelto sin descripción se acepta; dos en la misma búsqueda son un bloqueo', async () => {
+		const c = ctx('<html>Únete a LinkedIn</html>');
+		expect(await linkedin.fetchDetail!(posting, c)).toEqual({});
+		await expect(linkedin.fetchDetail!(posting, c)).rejects.toBeInstanceOf(BlockedError);
+	});
+
+	test('tres palabras seguidas sin ninguna tarjeta son un bloqueo', async () => {
+		const c = ctx('');
+		const run = async (term: string) => {
+			for await (const _ of linkedin.search(term, c));
+		};
+		await run('a');
+		await run('b');
+		await expect(run('c')).rejects.toBeInstanceOf(BlockedError);
+	});
+
+	test('una palabra con resultados reinicia la cuenta de vacías', async () => {
+		let body = '';
+		const c = { ...ctx(''), client: { ...createClient({ min: 0, max: 0 }), text: async () => body } };
+		const run = async (term: string) => {
+			for await (const _ of linkedin.search(term, c));
+		};
+		await run('a');
+		await run('b');
+		body = fixture('busqueda-remoto.html');
+		await run('c');
+		body = '';
+		await run('d');
+		await run('e');
+		await expect(run('f')).rejects.toBeInstanceOf(BlockedError);
 	});
 });
