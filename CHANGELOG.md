@@ -6,6 +6,8 @@ Todos los cambios relevantes del proyecto se documentan aquí. El formato sigue
 
 ## [Sin publicar]
 
+## [0.5.1] - 2026-10-22
+
 ### Agregado
 
 - **Freno para LinkedIn**: apretar Buscar muchas veces ya no se traduce en muchas peticiones.
@@ -155,7 +157,8 @@ Primera versión.
   arrancar.
 - Modo oscuro automático.
 
-[Sin publicar]: https://github.com/SebastianAsprino/jobfilter/compare/v0.5.0...HEAD
+[Sin publicar]: https://github.com/SebastianAsprino/jobfilter/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/SebastianAsprino/jobfilter/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.2.0...v0.3.0
