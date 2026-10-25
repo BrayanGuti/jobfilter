@@ -6,12 +6,15 @@ Todos los cambios relevantes del proyecto se documentan aquí. El formato sigue
 
 ## [Sin publicar]
 
+## [0.6.1] - 2026-10-24
+
 ### Agregado
 
 - **Filtros en la lista de vacantes**: por plataforma (con el número de vacantes de cada una)
   y por antigüedad (hoy, últimos 3 días, última semana, 15 días, último mes). Viven en la URL
   (`/?plataforma=linkedin&dias=7`), se pueden combinar y "Quitar filtros" los limpia. La marca
   "la mejor de la empresa" se sigue calculando con todas las vacantes de la empresa.
+  Gracias a [@BrayanGuti](https://github.com/BrayanGuti) ([#10](https://github.com/SebastianAsprino/jobfilter/pull/10)).
 
 ## [0.6.0] - 2026-10-23
 
@@ -175,7 +178,8 @@ Primera versión.
   arrancar.
 - Modo oscuro automático.
 
-[Sin publicar]: https://github.com/SebastianAsprino/jobfilter/compare/v0.6.0...HEAD
+[Sin publicar]: https://github.com/SebastianAsprino/jobfilter/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/SebastianAsprino/jobfilter/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/SebastianAsprino/jobfilter/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.4.0...v0.5.0
