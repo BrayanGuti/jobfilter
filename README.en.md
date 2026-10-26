@@ -56,7 +56,7 @@ JobFilter does that part for you. You only decide where to apply.
 
 ## Platforms
 
-✅ GetOnBoard · ✅ Computrabajo (17 Latin American countries) · ✅ LinkedIn Jobs (no login) · ✅ elempleo (Colombia) · ✅ PeakU · ✅ Hireline · ✅ Magneto365 (Colombia) · ✅ Talently · ⛔ Torre (requires an API key)
+✅ GetOnBoard · ✅ Computrabajo (17 Latin American countries) · ✅ LinkedIn Jobs (no login) · ✅ elempleo (Colombia) · ✅ PeakU · ✅ Hireline · ✅ Magneto365 (Colombia) · ✅ Talently · 🚫 Torre (discarded: it already matches jobs to your CV, and many of its postings come from other boards)
 
 See [docs/plataformas.md](docs/plataformas.md) (Spanish) for each platform's status, what's
 known about integrating it, and a step-by-step guide to add a new one. **That's the best way

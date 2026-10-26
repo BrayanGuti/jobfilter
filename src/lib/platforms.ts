@@ -5,7 +5,6 @@ export const PLATFORMS: Record<string, { name: string; hue: number }> = {
 	linkedin: { name: 'LinkedIn', hue: 212 },
 	computrabajo: { name: 'Computrabajo', hue: 25 },
 	elempleo: { name: 'elempleo', hue: 145 },
-	torre: { name: 'Torre', hue: 85 },
 	peaku: { name: 'PeakU', hue: 185 },
 	hireline: { name: 'Hireline', hue: 48 },
 	magneto: { name: 'Magneto365', hue: 305 },

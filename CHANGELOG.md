@@ -6,6 +6,14 @@ Todos los cambios relevantes del proyecto se documentan aquí. El formato sigue
 
 ## [Sin publicar]
 
+### Cambiado
+
+- **Torre queda descartada.** Torre ya hace lo mismo que JobFilter: analiza tu CV y te filtra
+  las vacantes según tu perfil. Además, buena parte de su listado se indexa de otros portales
+  (en la práctica parece un envoltorio de LinkedIn, que ya está integrado), así que traería
+  sobre todo vacantes repetidas. Lo que se investigó (sitemaps, API de reclutadores, API para
+  profesionales en private beta) queda en `docs/plataformas.md`.
+
 ## [0.8.0] - 2026-10-26
 
 ### Agregado

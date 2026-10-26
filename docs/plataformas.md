@@ -9,7 +9,7 @@
 | [LinkedIn](https://www.linkedin.com/jobs) | ✅ Empleos | Endpoint público de invitados (sin login) + detalle, con cupo de peticiones | — |
 | LinkedIn (publicaciones "estamos contratando") | Por decidir | La búsqueda de publicaciones exige sesión; ver abajo | — |
 | [elempleo](https://www.elempleo.com/co/) | ✅ Integrada | API JSON del sitio con token de la sesión anónima | — |
-| [Torre](https://torre.ai) | ⛔ Requiere API key | Cerró la búsqueda pública; API oficial en private beta | — |
+| [Torre](https://torre.ai) | 🚫 Descartada | Hace lo mismo que JobFilter y muchas de sus vacantes vienen de otros portales; ver abajo | — |
 | [PeakU](https://peaku.co) | ✅ Integrada | API pública del sitio + JSON-LD de cada vacante | — |
 | [Hireline](https://hireline.io/co) | ✅ Integrada | HTML renderizado en el servidor + JSON-LD de cada vacante | — |
 | [Magneto365](https://www.magneto365.com/co) | ✅ Integrada | API pública del sitio, con la descripción completa en el listado | — |
@@ -164,16 +164,24 @@ Sondeo hecho sin login y con un User-Agent de navegador (octubre de 2026):
     mismo título.
   - Busca también en la descripción ("desarrollador" trae "desarrollo de negocios"), así que
     el adapter usa `looseSearch`.
-- **Torre**: cerró su búsqueda pública (verificado en octubre de 2026).
-  - `POST https://search.torre.co/opportunities/_search/` responde 400 "Invalid request" a
-    cualquier cuerpo, incluso `{}`. La comunidad lo usaba hasta julio de 2026
-    ([torre-cli](https://github.com/jjuanrivvera/torre-cli)).
-  - Su web nueva es una app Flutter con sesión: busca en
-    `/api/search/opportunities/_search` con el id del usuario (`X-Torre-GgId`) y paginación
-    por cursor (`after`/`before`).
-  - La API oficial está en private beta, con acceso por solicitud y claves desde la cuenta
-    ([torre.ai/apiforcandidates](https://torre.ai/apiforcandidates)). Si se consigue una
-    clave, se puede integrar leyéndola de un archivo local fuera de git.
+- **Torre**: **descartada** (octubre de 2026). Torre ya hace lo que hace JobFilter: analiza tu
+  CV y te filtra las vacantes según tu perfil. Además, buena parte de su listado no es propio:
+  sus términos dicen que, salvo las publicaciones pagas o destacadas, las vacantes se
+  "indexan o publican de forma automática", y en la práctica parece un envoltorio de LinkedIn,
+  que ya está integrado. Integrarla traería sobre todo vacantes repetidas. Lo que se encontró,
+  por si alguien la retoma:
+  - La búsqueda pública está cerrada: `POST https://search.torre.co/opportunities/_search/`
+    responde 400 a cualquier cuerpo, y la web nueva (Flutter) busca con sesión. El
+    `robots.txt` prohíbe `/api/`.
+  - Los sitemaps (`https://torre.ai/sitemap-index.xml`) listan las vacantes activas por idioma
+    (`sitemap-es-N`, `sitemap-en-N`; 748 en español) como
+    `https://torre.ai/post/<id>-<empresa>-<título>`, con fecha de modificación. Cada página
+    trae un JSON-LD `JobPosting` completo, sin sesión.
+  - La API de reclutadores (`https://api.torre.ai/v1/openapi.json`) usa claves creadas desde la
+    cuenta y tiene `GET /v1/jobs/{jobId}`: gratis y sin ser dueño de la vacante, pero sin
+    búsqueda. La API para profesionales, que sí consulta vacantes, sigue en private beta
+    ([torre.ai/apiforprofessionals](https://torre.ai/apiforprofessionals)).
+  - Sus términos prohíben "spider, crawl, or scrape the Content".
 - **Talently**: Nuxt. La bolsa de empleo está en `/trabajos` (`/empleos`, `/ofertas` y `/jobs`
   dan 404), con filtros en la ruta: `/trabajos/rol-fullstack-developer/modalidad-remoto-global`.
   - La página carga las vacantes de una API pública, sin login:
