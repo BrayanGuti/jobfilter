@@ -6,6 +6,15 @@ Todos los cambios relevantes del proyecto se documentan aquí. El formato sigue
 
 ## [Sin publicar]
 
+### Agregado
+
+- Integración con **Magneto365** (Colombia) por la API pública que usa el sitio, porque sus
+  páginas de búsqueda responden 504. Busca remoto en Colombia y presencial o híbrido en tu
+  ciudad, de la vacante más nueva a la más vieja, con la fecha exacta. El listado ya trae la
+  descripción completa, así que no pide el detalle de cada vacante. Quita del título el código
+  interno que agregan algunas agencias ("Desarrollador/a PHP 1626256994-158"), para que una
+  republicación se reconozca.
+
 ## [0.6.1] - 2026-10-24
 
 ### Agregado

@@ -12,7 +12,7 @@
 | [Torre](https://torre.ai) | ⛔ Requiere API key | Cerró la búsqueda pública; API oficial en private beta | — |
 | [PeakU](https://peaku.co) | ✅ Integrada | API pública del sitio + JSON-LD de cada vacante | — |
 | [Hireline](https://hireline.io/co) | ✅ Integrada | HTML renderizado en el servidor + JSON-LD de cada vacante | — |
-| [Magneto365](https://www.magneto365.com/co) | 🔜 Siguiente | API interna o `__NEXT_DATA__`; navegador headless si no queda otra | Media-alta |
+| [Magneto365](https://www.magneto365.com/co) | ✅ Integrada | API pública del sitio, con la descripción completa en el listado | — |
 | [Talently](https://talently.tech) | Por confirmar | Parece un marketplace donde las empresas te buscan, sin listado público | — |
 
 Cada plataforma ya tiene su color reservado en `src/lib/platforms.ts`.
@@ -138,8 +138,32 @@ Sondeo hecho sin login y con un User-Agent de navegador (octubre de 2026):
   - Detalle: JSON-LD `JobPosting` con título, `hiringOrganization`, `datePosted`, descripción
     completa y `jobLocationType`. Su `applicantLocationRequirements` parece venir por defecto
     en México aunque la tarjeta diga LATAM: para la ubicación se usa la tarjeta.
-- **Magneto365**: Next.js. `/co/empleos` responde, pero las rutas de búsqueda probadas dieron
-  500. Hay que mirar las peticiones del sitio desde el navegador.
+- **Magneto365** (Colombia): Next.js. Las páginas de búsqueda y de cada vacante se renderizan
+  en el servidor y en octubre de 2026 daban 504 a los 10 segundos; solo la portada (`/co`)
+  responde, porque está precargada. El sitio llama a una API pública, sin login, que sí
+  responde rápido:
+  - Búsqueda: `https://api.magneto365.com/jobs/v1/public/jobs/search` con los parámetros
+    `device=desktop`, `paginator[page]=<n>`, `paginator[pageSize]=30` (solo acepta 20 o 30),
+    `order[field]=publish_date`, `order[order]=DESC`, `queries[0][field]=all` y
+    `queries[0][term]=<texto>`. Ignora `q`. Sin `queries` devuelve todas las vacantes
+    (unas 370.000).
+  - Filtros: `filters[locations][0]` con el país (`C47` es Colombia) o una ciudad
+    (`CT17028` es Barranquilla), y `filters[work_modality][i]` con `remote`, `hybrid` u
+    `onSite`. `city_id` y `country_id` dan 400; `publish_date` no filtra.
+  - El id de la ciudad sale del autocompletado:
+    `https://api.magneto365.com/jobs/v1/public/locations?term=<ciudad>&country_id=47`.
+  - Cada vacante trae id, `jobSlug` (la URL es `https://www.magneto365.com/co/empleos/<jobSlug>`),
+    título, empresa (`confidential`), ciudades, fecha exacta (`publishDate`), habilidades,
+    nivel de estudios y la descripción completa en HTML: es la misma que la del detalle
+    (`/v1/public/jobs/<jobSlug>`), así que no se pide.
+  - `isRemote` vale `true` para remoto y para híbrido. El adapter busca remoto en el país y
+    presencial o híbrido en la ciudad por separado, y en la segunda usa `isRemote` para
+    distinguir híbrido de presencial.
+  - Algunas agencias le agregan su código interno al título ("Desarrollador/a PHP
+    1626256994-158"). El adapter lo quita, para que la misma vacante republicada tenga el
+    mismo título.
+  - Busca también en la descripción ("desarrollador" trae "desarrollo de negocios"), así que
+    el adapter usa `looseSearch`.
 - **Torre**: cerró su búsqueda pública (verificado en octubre de 2026).
   - `POST https://search.torre.co/opportunities/_search/` responde 400 "Invalid request" a
     cualquier cuerpo, incluso `{}`. La comunidad lo usaba hasta julio de 2026

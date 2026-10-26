@@ -59,7 +59,7 @@ JobFilter hace esa parte por ti. Tú solo decides a cuáles aplicar.
 | ✅ | elempleo | Integrada (Colombia) |
 | ✅ | PeakU | Integrada |
 | ✅ | Hireline | Integrada (Colombia y México) |
-| 🔜 | Magneto365 | Siguiente |
+| ✅ | Magneto365 | Integrada (Colombia) |
 | ⛔ | Torre | Requiere API key (cerró la búsqueda pública) |
 
 El estado de cada una, lo que se sabe de cómo integrarla y la guía para agregar una nueva
@@ -126,7 +126,7 @@ IA.
 - [x] elempleo
 - [x] PeakU
 - [x] Hireline
-- [ ] Magneto365
+- [x] Magneto365
 - [ ] Torre, si se consigue acceso a su API
 - [ ] Lista negra para empresas confidenciales (agrupadas por descripción)
 
