@@ -6,6 +6,8 @@ Todos los cambios relevantes del proyecto se documentan aquí. El formato sigue
 
 ## [Sin publicar]
 
+## [0.8.1] - 2026-10-26
+
 ### Cambiado
 
 - **Torre queda descartada.** Torre ya hace lo mismo que JobFilter: analiza tu CV y te filtra
@@ -208,7 +210,8 @@ Primera versión.
   arrancar.
 - Modo oscuro automático.
 
-[Sin publicar]: https://github.com/SebastianAsprino/jobfilter/compare/v0.8.0...HEAD
+[Sin publicar]: https://github.com/SebastianAsprino/jobfilter/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/SebastianAsprino/jobfilter/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/SebastianAsprino/jobfilter/compare/v0.6.0...v0.6.1
