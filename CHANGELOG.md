@@ -6,6 +6,17 @@ Todos los cambios relevantes del proyecto se documentan aquí. El formato sigue
 
 ## [Sin publicar]
 
+## [0.7.0] - 2026-10-26
+
+### Agregado
+
+- Integración con **Magneto365** (Colombia) por la API pública que usa el sitio, porque sus
+  páginas de búsqueda responden 504. Busca remoto en Colombia y presencial o híbrido en tu
+  ciudad, de la vacante más nueva a la más vieja, con la fecha exacta. El listado ya trae la
+  descripción completa, así que no pide el detalle de cada vacante. Quita del título el código
+  interno que agregan algunas agencias ("Desarrollador/a PHP 1626256994-158"), para que una
+  republicación se reconozca.
+
 ## [0.6.1] - 2026-10-24
 
 ### Agregado
@@ -178,7 +189,8 @@ Primera versión.
   arrancar.
 - Modo oscuro automático.
 
-[Sin publicar]: https://github.com/SebastianAsprino/jobfilter/compare/v0.6.1...HEAD
+[Sin publicar]: https://github.com/SebastianAsprino/jobfilter/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/SebastianAsprino/jobfilter/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/SebastianAsprino/jobfilter/compare/v0.5.0...v0.5.1
