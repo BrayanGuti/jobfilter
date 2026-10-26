@@ -129,7 +129,7 @@ IA.
 - [x] Hireline
 - [x] Magneto365
 - [x] Talently
-- [ ] Lista negra para empresas confidenciales (agrupadas por descripción)
+- [x] Lista negra para empresas confidenciales (agrupadas por descripción)
 
 ## Contribuir
 

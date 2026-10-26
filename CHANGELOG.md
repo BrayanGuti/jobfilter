@@ -6,6 +6,17 @@ Todos los cambios relevantes del proyecto se documentan aquí. El formato sigue
 
 ## [Sin publicar]
 
+### Agregado
+
+- **Lista negra para empresas confidenciales.** Las vacantes sin empresa ("Empresa
+  confidencial", "Importante empresa del sector") quedaban fuera de la regla de
+  republicaciones. Ahora se agrupan por la descripción: son la misma vacante si la descripción
+  es ≥ 90% igual, o si tienen el mismo título y una descripción ≥ 60% igual (el título solo no
+  alcanza, porque muchas empresas distintas publican "Desarrollador Backend" sin dar su
+  nombre). Cuando una se publica más de una vez queda bajo un publicador `Empresa
+  confidencial: "<título>"`, con el aviso ⟲, la lista negra a las 3 publicaciones en 3 meses,
+  Bloquear y lista blanca, como cualquier empresa.
+
 ## [0.8.1] - 2026-10-26
 
 ### Cambiado

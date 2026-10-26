@@ -1,37 +1,27 @@
 import { eq, sql } from 'drizzle-orm';
 import { db } from '$lib/server/db/client';
 import { companies, postings as postingsTable, publications } from '$lib/server/db/schema';
-import { normalizeText } from '$lib/server/shared/normalize';
 import type { Reason } from '../reasons';
+import { sameVacancies, type Posting, type Vacancy } from '../same-vacancy';
 
 const DAY = 86_400_000;
 const WINDOW = 90 * DAY; // ventana de 3 meses
-const MIN_GAP = 7 * DAY; // más cerca es la misma publicación (o la misma en dos plataformas)
 // Una republicación puede ser real (el contratado no funcionó); 3 en 3 meses ya es un patrón
 // de recolectar CVs (como publicar la misma vacante cada mes).
 const BLACKLIST_AT = 3;
-// Medido con vacantes reales: distintas de una misma empresa ≤ 0,21 (comparten la
-// presentación de la empresa); la misma con el texto retocado ≈ 0,7; copia exacta = 1.
-const AUTO_SIMILARITY = 0.9; // el script solo, sin tu opinión: casi idénticas
-const DISCARD_SIMILARITY = 0.6; // con tu descarte basta con que sea muy parecida
-
-type Posting = {
-	id: number;
-	companyId: number;
-	title: string;
-	normalizedTitle: string;
-	description: string | null;
-	status: string;
-	dates: number[]; // publicaciones, ordenadas
-};
-
-/** Una misma vacante: sus publicaciones y si tu descarte ayudó a reconocerla. */
-type Vacancy = { postings: Posting[]; dates: number[]; discards: Posting[] };
+// Nombre normalizado de los publicadores confidenciales; normalizeCompany nunca genera ':'.
+const CONFIDENTIAL = 'confidencial:';
 
 const day = (t: number) => new Date(t).toISOString().slice(0, 10);
+const parseDates = (dates: string) =>
+	dates
+		.split(',')
+		.map(Date.parse)
+		.sort((a, b) => a - b);
 
 /**
  * Recalcula todo:
+ * - agrupa las vacantes confidenciales que son la misma bajo un publicador confidencial;
  * - marca cada vacante con cuántas veces se publicó (el aviso "⟲ 2ª publicación" de la lista);
  * - manda a lista negra las empresas con una vacante publicada 3+ veces en 3 meses;
  * - saca de la lista negra automática las que ya no tienen motivo (por ejemplo, al retomar).
@@ -39,6 +29,7 @@ const day = (t: number) => new Date(t).toISOString().slice(0, 10);
  * lista negra automática.
  */
 export function recalculateBlacklist(): number {
+	groupConfidential();
 	const rows = db
 		.select({
 			id: postingsTable.id,
@@ -64,10 +55,7 @@ export function recalculateBlacklist(): number {
 		rows.map((r) => ({
 			...r,
 			companyId: r.companyId!,
-			dates: r.dates
-				.split(',')
-				.map(Date.parse)
-				.sort((a, b) => a - b)
+			dates: parseDates(r.dates)
 		})),
 		(p) => p.companyId
 	);
@@ -112,41 +100,6 @@ export function recalculateBlacklist(): number {
 	return count;
 }
 
-/**
- * Agrupa las vacantes de una empresa que son la misma: mismo título normalizado, descripción
- * casi idéntica, o —si descartaste una de las dos— descripción muy parecida.
- */
-function sameVacancies(postings: Posting[]): Vacancy[] {
-	const shingles = postings.map((p) => (p.description ? shingleSet(p.description) : null));
-	const parent = postings.map((_, i) => i);
-	const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i])));
-	const linkedByDiscard = new Set<number>();
-
-	for (let i = 0; i < postings.length; i++) {
-		for (let j = i + 1; j < postings.length; j++) {
-			const a = postings[i];
-			const b = postings[j];
-			const sim = shingles[i] && shingles[j] ? jaccard(shingles[i]!, shingles[j]!) : 0;
-			const discarded = [a, b].filter((p) => p.status === 'descartada');
-			if (a.normalizedTitle === b.normalizedTitle || sim >= AUTO_SIMILARITY) {
-				parent[find(i)] = find(j);
-			} else if (discarded.length && sim >= DISCARD_SIMILARITY) {
-				parent[find(i)] = find(j);
-				discarded.forEach((p) => linkedByDiscard.add(p.id));
-			}
-		}
-	}
-
-	return [...Map.groupBy(postings, (_, i) => find(i)).values()].map((group) => {
-		// publicaciones distintas: separadas por más de 7 días de la anterior contada
-		const dates: number[] = [];
-		for (const t of group.flatMap((p) => p.dates).sort((a, b) => a - b)) {
-			if (!dates.length || t - dates.at(-1)! > MIN_GAP) dates.push(t);
-		}
-		return { postings: group, dates, discards: group.filter((p) => linkedByDiscard.has(p.id)) };
-	});
-}
-
 /** Motivo de lista negra si hay 3+ publicaciones dentro de alguna ventana de 3 meses. */
 function reason(v: Vacancy): Reason[] {
 	let start = -1;
@@ -172,17 +125,63 @@ function reason(v: Vacancy): Reason[] {
 	];
 }
 
-/** Grupos de 3 palabras seguidas: comparar estos conjuntos mide cuánto texto comparten. */
-function shingleSet(text: string): Set<string> {
-	const words = normalizeText(text).split(' ');
-	const set = new Set<string>();
-	for (let i = 0; i + 3 <= words.length; i++) set.add(words.slice(i, i + 3).join(' '));
-	return set;
+/**
+ * Las vacantes confidenciales no tienen empresa, así que la regla no las veía. Las que son la
+ * misma vacante y se publicaron más de una vez quedan bajo un "publicador confidencial": una
+ * empresa con nombre `Empresa confidencial: "<título>"`, que desde ahí sigue la regla de
+ * siempre (aviso ⟲, lista negra, bloqueo y lista blanca). Una sola publicación queda sin
+ * empresa. Entre corridas se reutiliza el publicador que ya tenía el grupo.
+ */
+function groupConfidential(): void {
+	const rows = db
+		.select({
+			id: postingsTable.id,
+			companyId: postingsTable.companyId,
+			title: postingsTable.title,
+			normalizedTitle: postingsTable.normalizedTitle,
+			description: postingsTable.description,
+			status: postingsTable.status,
+			dates: sql<string>`group_concat(${publications.publishedAt})`
+		})
+		.from(postingsTable)
+		.innerJoin(publications, eq(publications.postingId, postingsTable.id))
+		.leftJoin(companies, eq(companies.id, postingsTable.companyId))
+		.where(sql`${postingsTable.companyId} IS NULL OR ${companies.normalizedName} LIKE ${CONFIDENTIAL + '%'}`)
+		.groupBy(postingsTable.id)
+		.all();
+	const postings: Posting[] = rows.map((r) => ({ ...r, dates: parseDates(r.dates) }));
+
+	db.transaction((tx) => {
+		const used = new Set<number>();
+		for (const v of sameVacancies(postings, { confidential: true })) {
+			let companyId: number | null = null;
+			if (v.dates.length > 1) {
+				// el publicador que ya tenía el grupo; si el grupo se partió, la otra parte crea uno nuevo
+				const own = v.postings.map((p) => p.companyId).filter((id) => id !== null && !used.has(id));
+				companyId = own.length ? Math.min(...(own as number[])) : createPublisher(v);
+				used.add(companyId);
+			}
+			for (const p of v.postings) {
+				if (p.companyId !== companyId) {
+					tx.update(postingsTable).set({ companyId }).where(eq(postingsTable.id, p.id)).run();
+				}
+			}
+		}
+		// los publicadores que se quedaron sin vacantes (dos grupos que eran la misma vacante)
+		tx.delete(companies)
+			.where(
+				sql`${companies.normalizedName} LIKE ${CONFIDENTIAL + '%'} AND NOT EXISTS (SELECT 1 FROM ${postingsTable} WHERE ${postingsTable.companyId} = ${companies.id})`
+			)
+			.run();
+	});
 }
 
-function jaccard(a: Set<string>, b: Set<string>): number {
-	let shared = 0;
-	for (const s of a) if (b.has(s)) shared++;
-	const union = a.size + b.size - shared;
-	return union ? shared / union : 0;
+function createPublisher(v: Vacancy): number {
+	const first = v.postings.reduce((a, b) => (b.id < a.id ? b : a));
+	return db
+		.insert(companies)
+		.values({ name: `Empresa confidencial: "${first.title}"`, normalizedName: `${CONFIDENTIAL}${first.id}` })
+		.onConflictDoUpdate({ target: companies.normalizedName, set: { name: sql`${companies.name}` } })
+		.returning({ id: companies.id })
+		.get()!.id;
 }

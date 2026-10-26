@@ -86,6 +86,21 @@ Jaccard). Medido con vacantes reales:
   la misma vacante aunque el texto cambie. Ese descarte suma una publicación al conteo, pero
   no tumba a ninguna empresa por sí solo.
 
+### Empresas confidenciales
+
+Algunas vacantes no dicen la empresa ("Empresa confidencial", "Importante empresa del
+sector"). Como no hay nombre que comparar, se agrupan por la descripción:
+
+- Son la misma vacante si la descripción es **≥ 90% igual**, o si tienen el **mismo título y
+  una descripción ≥ 60% igual**. El título solo no alcanza: muchas empresas distintas publican
+  "Desarrollador Backend" sin dar su nombre. Con tu descarte basta con **≥ 60%**, como
+  siempre.
+- Cuando una se publica más de una vez, sus publicaciones quedan bajo un **publicador
+  confidencial**, que aparece como `Empresa confidencial: "<título>"`. Desde ahí sigue la regla
+  de siempre: aviso ⟲, lista negra con 3 publicaciones en 3 meses, Bloquear y lista blanca.
+- Medido con vacantes reales: entre confidenciales distintas, la mediana de texto compartido
+  es 0,4%; las repetidas comparten entre 78% y 100%.
+
 ### Lo que decides tú
 
 - **Bloquear** (junto al nombre de la empresa): la manda a la lista negra a mano. Sirve para
