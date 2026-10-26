@@ -6,6 +6,17 @@ Todos los cambios relevantes del proyecto se documentan aquí. El formato sigue
 
 ## [Sin publicar]
 
+## [0.8.0] - 2026-10-26
+
+### Agregado
+
+- Integración con **Talently** por la API pública que usa su página de trabajos. Como tiene
+  pocas vacantes activas (unas 40), trae el listado completo en **una sola petición** por
+  búsqueda, para todas las palabras clave, y lo filtra por palabra clave (título, rol y
+  tecnologías) y ubicación: remoto global, remoto local en tu país, o presencial/híbrido en tu
+  ciudad. El listado ya trae la fecha exacta, la empresa y las responsabilidades y requisitos,
+  así que no pide el detalle de cada vacante.
+
 ## [0.7.0] - 2026-10-26
 
 ### Agregado
@@ -189,7 +200,8 @@ Primera versión.
   arrancar.
 - Modo oscuro automático.
 
-[Sin publicar]: https://github.com/SebastianAsprino/jobfilter/compare/v0.7.0...HEAD
+[Sin publicar]: https://github.com/SebastianAsprino/jobfilter/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/SebastianAsprino/jobfilter/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.5.1...v0.6.0
