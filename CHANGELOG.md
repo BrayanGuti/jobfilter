@@ -6,6 +6,15 @@ Todos los cambios relevantes del proyecto se documentan aquí. El formato sigue
 
 ## [Sin publicar]
 
+### Agregado
+
+- Integración con **Talently** por la API pública que usa su página de trabajos. Como tiene
+  pocas vacantes activas (unas 40), trae el listado completo en **una sola petición** por
+  búsqueda, para todas las palabras clave, y lo filtra por palabra clave (título, rol y
+  tecnologías) y ubicación: remoto global, remoto local en tu país, o presencial/híbrido en tu
+  ciudad. El listado ya trae la fecha exacta, la empresa y las responsabilidades y requisitos,
+  así que no pide el detalle de cada vacante.
+
 ## [0.7.0] - 2026-10-26
 
 ### Agregado

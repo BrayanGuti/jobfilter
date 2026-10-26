@@ -60,6 +60,7 @@ JobFilter hace esa parte por ti. Tú solo decides a cuáles aplicar.
 | ✅ | PeakU | Integrada |
 | ✅ | Hireline | Integrada (Colombia y México) |
 | ✅ | Magneto365 | Integrada (Colombia) |
+| ✅ | Talently | Integrada |
 | ⛔ | Torre | Requiere API key (cerró la búsqueda pública) |
 
 El estado de cada una, lo que se sabe de cómo integrarla y la guía para agregar una nueva
@@ -127,6 +128,7 @@ IA.
 - [x] PeakU
 - [x] Hireline
 - [x] Magneto365
+- [x] Talently
 - [ ] Torre, si se consigue acceso a su API
 - [ ] Lista negra para empresas confidenciales (agrupadas por descripción)
 

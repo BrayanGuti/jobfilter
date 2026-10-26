@@ -13,7 +13,7 @@
 | [PeakU](https://peaku.co) | ✅ Integrada | API pública del sitio + JSON-LD de cada vacante | — |
 | [Hireline](https://hireline.io/co) | ✅ Integrada | HTML renderizado en el servidor + JSON-LD de cada vacante | — |
 | [Magneto365](https://www.magneto365.com/co) | ✅ Integrada | API pública del sitio, con la descripción completa en el listado | — |
-| [Talently](https://talently.tech) | Por confirmar | Parece un marketplace donde las empresas te buscan, sin listado público | — |
+| [Talently](https://talently.tech/trabajos) | ✅ Integrada | API pública del sitio: el listado completo en una petición | — |
 
 Cada plataforma ya tiene su color reservado en `src/lib/platforms.ts`.
 
@@ -174,7 +174,25 @@ Sondeo hecho sin login y con un User-Agent de navegador (octubre de 2026):
   - La API oficial está en private beta, con acceso por solicitud y claves desde la cuenta
     ([torre.ai/apiforcandidates](https://torre.ai/apiforcandidates)). Si se consigue una
     clave, se puede integrar leyéndola de un archivo local fuera de git.
-- **Talently**: `/empleos`, `/ofertas` y `/jobs` dan 404.
+- **Talently**: Nuxt. La bolsa de empleo está en `/trabajos` (`/empleos`, `/ofertas` y `/jobs`
+  dan 404), con filtros en la ruta: `/trabajos/rol-fullstack-developer/modalidad-remoto-global`.
+  - La página carga las vacantes de una API pública, sin login:
+    `https://admin.talently.tech/api/v4/web/work-offers/search?page=<n>&per_page=<m>`.
+    Acepta `per_page=100`; en octubre de 2026 había **43 vacantes activas**, así que el
+    adapter trae el listado completo en **una sola petición** por búsqueda, para todas las
+    palabras clave, y filtra localmente.
+  - Cada vacante trae id, `public_url` (la URL es `https://talently.tech/oferta/<public_url>`;
+    `slug` da 404), título, empresa (`business.name`, `null` si `is_confidential`), país,
+    ciudad, fecha exacta (`published_at`), rol (`developer_type`), tecnologías (`stacks`) y
+    las responsabilidades y requisitos en markdown con entidades HTML (`&amp;`).
+    `description` viene vacío o como `<p>null</p>`.
+  - `work_modality.id`: 1 = Remoto Global (cualquier país), 4 = Remoto local (solo el país de
+    la vacante), 2 = Híbrido, 3 = Presencial.
+  - El campo `language` no es confiable (hay vacantes en inglés marcadas `es`): el idioma lo
+    decide la detección por la descripción, como en las demás plataformas.
+  - El detalle (`/v4/web/offers/<public_url>`) no agrega nada que se use, así que no se pide.
+  - Sus términos prohíben el scraping y la extracción masiva de datos. Una petición por
+    búsqueda queda lejos de eso, pero aplica el aviso de uso personal del README.
 
 ## Agregar una plataforma
 
