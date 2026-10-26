@@ -34,6 +34,7 @@ src/lib/server/
     companies/
       commands/  recalculate-blacklist, block-company, whitelist-company, unlist-company
       queries/   list-companies, count-blacklisted
+      same-vacancy  qué vacantes son la misma (título y texto compartido); sin base de datos
     keywords/
       commands/  import-keyword-seed, add-keyword, disable-keyword
       queries/   list-keywords
