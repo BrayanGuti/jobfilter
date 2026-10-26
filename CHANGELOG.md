@@ -6,6 +6,8 @@ Todos los cambios relevantes del proyecto se documentan aquí. El formato sigue
 
 ## [Sin publicar]
 
+## [0.9.0] - 2026-10-26
+
 ### Agregado
 
 - **Lista negra para empresas confidenciales.** Las vacantes sin empresa ("Empresa
@@ -221,7 +223,8 @@ Primera versión.
   arrancar.
 - Modo oscuro automático.
 
-[Sin publicar]: https://github.com/SebastianAsprino/jobfilter/compare/v0.8.1...HEAD
+[Sin publicar]: https://github.com/SebastianAsprino/jobfilter/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/SebastianAsprino/jobfilter/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/SebastianAsprino/jobfilter/compare/v0.6.1...v0.7.0
