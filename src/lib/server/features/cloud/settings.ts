@@ -9,6 +9,8 @@ export type CloudSettings = {
 	refreshToken: string;
 	email: string | null;
 	lastSyncAt: string | null;
+	/** modifiedTime del respaldo en Drive tras la última sincronización de este computador. */
+	remoteVersion?: string | null;
 };
 
 export function loadSettings(): CloudSettings | null {

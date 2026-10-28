@@ -1,20 +1,48 @@
 <script lang="ts">
+	import { onMount, tick } from 'svelte';
 	import { enhance } from '$app/forms';
-	import { page } from '$app/state';
+	import { invalidateAll } from '$app/navigation';
 
 	let { data, form } = $props();
 
 	let busy = $state<string | null>(null);
-	const error = $derived(form?.error ?? page.url.searchParams.get('error'));
+	/** Qué hacer cuando la pestaña de Google avise que terminó: solo conectar, o conectar y sincronizar. */
+	let waitingLogin = $state<'login' | 'sync' | null>(null);
+	let loginError = $state<string | null>(null);
+	let syncForm = $state<HTMLFormElement>();
+	const error = $derived(loginError ?? form?.error);
 
 	/** Deshabilita los botones mientras Google responde (subir la base puede tardar). */
 	const track = (action: string) => () => {
 		busy = action;
+		loginError = null;
 		return async ({ update }: { update: () => Promise<void> }) => {
 			await update();
 			busy = null;
 		};
 	};
+
+	/** Abre Google en otra pestaña; /nube/callback avisa por el canal cuando vuelve. */
+	function login(then: 'login' | 'sync') {
+		loginError = null;
+		waitingLogin = then;
+		window.open('/nube/conectar', '_blank');
+	}
+
+	onMount(() => {
+		const channel = new BroadcastChannel('jobfilter-nube');
+		channel.onmessage = async ({ data: message }: MessageEvent<{ error: string | null }>) => {
+			const then = waitingLogin;
+			waitingLogin = null;
+			loginError = message.error;
+			await invalidateAll();
+			if (!message.error && then === 'sync') {
+				await tick();
+				syncForm?.requestSubmit();
+			}
+		};
+		return () => channel.close();
+	});
 </script>
 
 <p class="muted intro">
@@ -27,46 +55,64 @@
 {#if !data.cloud.configured}
 	<div class="card">
 		<p>
-			Para conectar Google Drive falta crear tus credenciales de Google y ponerlas en
-			<code>.env</code>. Son unos minutos; los pasos están en <code>docs/nube.md</code>.
+			Esta copia de JobFilter no trae cliente de Google, así que no puede iniciar sesión. Los pasos
+			para ponerle uno están en <code>docs/nube.md</code>.
 		</p>
-	</div>
-{:else if !data.cloud.connected}
-	<div class="card">
-		<p>No hay ninguna cuenta conectada.</p>
-		<!-- Sin use:enhance: la respuesta es una redirección a Google y la hace el navegador. -->
-		<form method="POST" action="?/conectar">
-			<button class="primary">Conectar Google Drive</button>
-		</form>
 	</div>
 {:else}
 	<div class="card">
 		<p>
-			Conectado como <strong>{data.cloud.email ?? 'tu cuenta de Google'}</strong>.
-			{#if data.cloud.lastSyncAt}
-				Última sincronización: {new Date(data.cloud.lastSyncAt).toLocaleString('es')}.
+			{#if data.cloud.connected}
+				Sesión iniciada como <strong>{data.cloud.email ?? 'tu cuenta de Google'}</strong>.
+				{#if data.cloud.lastSyncAt}
+					Última sincronización: {new Date(data.cloud.lastSyncAt).toLocaleString('es')}.
+				{:else}
+					Este computador todavía no se ha sincronizado con tu Drive.
+				{/if}
+			{:else if waitingLogin}
+				Termina de iniciar sesión en la pestaña de Google que se abrió.
 			{:else}
-				Este computador todavía no se ha sincronizado con tu Drive.
+				No has iniciado sesión. Al tocar un botón se abre Google en otra pestaña.
 			{/if}
 		</p>
 		<div class="actions">
-			<form method="POST" action="?/guardar" use:enhance={track('guardar')}>
-				<button class="primary" disabled={busy !== null}>
-					{busy === 'guardar' ? 'Guardando…' : 'Guardar en Drive'}
+			<form
+				method="POST"
+				action="?/sincronizar"
+				bind:this={syncForm}
+				use:enhance={track('sincronizar')}
+			>
+				<button
+					class="primary"
+					disabled={busy !== null}
+					onclick={(e) => {
+						if (!data.cloud.connected) {
+							e.preventDefault();
+							login('sync');
+						}
+					}}
+				>
+					{busy === 'sincronizar' ? 'Sincronizando…' : 'Sincronizar'}
 				</button>
 			</form>
-			<form method="POST" action="?/restaurar" use:enhance={track('restaurar')}>
-				<button disabled={busy !== null}>
-					{busy === 'restaurar' ? 'Bajando…' : 'Restaurar desde Drive'}
+			{#if data.cloud.connected}
+				<form method="POST" action="?/restaurar" use:enhance={track('restaurar')}>
+					<button disabled={busy !== null}>
+						{busy === 'restaurar' ? 'Bajando…' : 'Restaurar desde Drive'}
+					</button>
+				</form>
+				<form method="POST" action="?/desconectar" use:enhance={track('desconectar')}>
+					<button class="link" disabled={busy !== null}>Cerrar sesión</button>
+				</form>
+			{:else}
+				<button disabled={busy !== null} onclick={() => login('login')}>
+					Iniciar sesión con Google
 				</button>
-			</form>
-			<form method="POST" action="?/desconectar" use:enhance={track('desconectar')}>
-				<button class="link" disabled={busy !== null}>Desconectar</button>
-			</form>
+			{/if}
 		</div>
 		<p class="muted small">
-			Restaurar reemplaza lo que hay en este computador por el respaldo. Lo actual queda guardado en
-			<code>data/</code> por si te arrepientes.
+			Sincronizar sube todo lo de este computador y reemplaza el respaldo. Restaurar hace lo
+			contrario; lo que había queda guardado en <code>data/</code> por si te arrepientes.
 		</p>
 	</div>
 {/if}
@@ -80,11 +126,16 @@
 
 {#if error}
 	<p class="error">{error}</p>
-	{#if form?.canForce}
-		<form method="POST" action="?/guardar" use:enhance={track('guardar')}>
-			<input type="hidden" name="force" value="1" />
-			<button class="link" disabled={busy !== null}>Reemplazar el respaldo de Drive</button>
-		</form>
+	{#if form?.conflict}
+		<div class="actions">
+			<form method="POST" action="?/restaurar" use:enhance={track('restaurar')}>
+				<button class="primary" disabled={busy !== null}>Traer lo de Drive</button>
+			</form>
+			<form method="POST" action="?/sincronizar" use:enhance={track('sincronizar')}>
+				<input type="hidden" name="force" value="1" />
+				<button disabled={busy !== null}>Reemplazarlo con lo de este computador</button>
+			</form>
+		</div>
 	{/if}
 {/if}
 

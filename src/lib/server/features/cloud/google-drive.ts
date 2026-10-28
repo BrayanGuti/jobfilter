@@ -1,4 +1,5 @@
 import { env } from '$env/dynamic/private';
+import { GOOGLE_CLIENT } from './oauth-client';
 
 // Solo la carpeta oculta de la app (appDataFolder): JobFilter no ve ni toca el resto de tu Drive.
 const SCOPES = 'https://www.googleapis.com/auth/drive.appdata openid email';
@@ -8,13 +9,18 @@ const REVOKE_URL = 'https://oauth2.googleapis.com/revoke';
 const FILES_URL = 'https://www.googleapis.com/drive/v3/files';
 const UPLOAD_URL = 'https://www.googleapis.com/upload/drive/v3/files';
 
-export const isConfigured = () => Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
+/** El de .env si lo hay; si no, el que trae la app (oauth-client.ts). */
+function client() {
+	return env.GOOGLE_CLIENT_ID
+		? { client_id: env.GOOGLE_CLIENT_ID, client_secret: env.GOOGLE_CLIENT_SECRET ?? '' }
+		: { client_id: GOOGLE_CLIENT.id, client_secret: GOOGLE_CLIENT.secret };
+}
+
+export const isConfigured = () => Boolean(client().client_id);
 
 function credentials() {
-	if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
-		throw new Error('Faltan GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en .env. Ver docs/nube.md.');
-	}
-	return { client_id: env.GOOGLE_CLIENT_ID, client_secret: env.GOOGLE_CLIENT_SECRET };
+	if (!isConfigured()) throw new Error('Esta copia de JobFilter no trae cliente de Google. Ver docs/nube.md.');
+	return client();
 }
 
 async function check(res: Response, action: string): Promise<Response> {
@@ -70,32 +76,38 @@ async function accessToken(refreshToken: string): Promise<string> {
 	return (await (await check(res, 'renovar el acceso')).json()).access_token;
 }
 
-async function findFile(token: string, name: string): Promise<string | undefined> {
+/** modifiedTime cambia cada vez que alguien sube el archivo: sirve de versión del respaldo. */
+type RemoteFile = { id: string; modifiedTime: string };
+
+async function findFile(token: string, name: string): Promise<RemoteFile | undefined> {
 	const params = new URLSearchParams({
 		spaces: 'appDataFolder',
 		q: `name = '${name}' and trashed = false`,
-		fields: 'files(id)'
+		fields: 'files(id,modifiedTime)'
 	});
 	const res = await fetch(`${FILES_URL}?${params}`, {
 		headers: { Authorization: `Bearer ${token}` }
 	});
-	return (await (await check(res, `buscar ${name}`)).json()).files[0]?.id;
+	return (await (await check(res, `buscar ${name}`)).json()).files[0];
 }
 
-/** Crea el archivo en la carpeta de la app o lo reemplaza si ya existe. */
-export async function putFile(refreshToken: string, name: string, data: Uint8Array<ArrayBuffer>) {
+/** Crea el archivo en la carpeta de la app o lo reemplaza si ya existe. Devuelve su modifiedTime. */
+export async function putFile(
+	refreshToken: string,
+	name: string,
+	data: Uint8Array<ArrayBuffer>
+): Promise<string> {
 	const token = await accessToken(refreshToken);
 	const headers = { Authorization: `Bearer ${token}` };
-	const id = await findFile(token, name);
+	const existing = await findFile(token, name);
 
-	if (id) {
-		const res = await fetch(`${UPLOAD_URL}/${id}?uploadType=media`, {
+	if (existing) {
+		const res = await fetch(`${UPLOAD_URL}/${existing.id}?uploadType=media&fields=modifiedTime`, {
 			method: 'PATCH',
 			headers,
 			body: data
 		});
-		await check(res, `subir ${name}`);
-		return;
+		return (await (await check(res, `subir ${name}`)).json()).modifiedTime;
 	}
 
 	const form = new FormData();
@@ -104,26 +116,31 @@ export async function putFile(refreshToken: string, name: string, data: Uint8Arr
 		new Blob([JSON.stringify({ name, parents: ['appDataFolder'] })], { type: 'application/json' })
 	);
 	form.append('file', new Blob([data]));
-	const res = await fetch(`${UPLOAD_URL}?uploadType=multipart`, {
+	const res = await fetch(`${UPLOAD_URL}?uploadType=multipart&fields=modifiedTime`, {
 		method: 'POST',
 		headers,
 		body: form
 	});
-	await check(res, `subir ${name}`);
+	return (await (await check(res, `subir ${name}`)).json()).modifiedTime;
 }
 
-export async function hasFile(refreshToken: string, name: string): Promise<boolean> {
-	return (await findFile(await accessToken(refreshToken), name)) !== undefined;
+/** modifiedTime del archivo en la nube, o null si no existe. */
+export async function fileVersion(refreshToken: string, name: string): Promise<string | null> {
+	return (await findFile(await accessToken(refreshToken), name))?.modifiedTime ?? null;
 }
 
-export async function getFile(refreshToken: string, name: string): Promise<Uint8Array<ArrayBuffer> | null> {
+export async function getFile(
+	refreshToken: string,
+	name: string
+): Promise<{ data: Uint8Array<ArrayBuffer>; modifiedTime: string } | null> {
 	const token = await accessToken(refreshToken);
-	const id = await findFile(token, name);
-	if (!id) return null;
-	const res = await fetch(`${FILES_URL}/${id}?alt=media`, {
+	const file = await findFile(token, name);
+	if (!file) return null;
+	const res = await fetch(`${FILES_URL}/${file.id}?alt=media`, {
 		headers: { Authorization: `Bearer ${token}` }
 	});
-	return new Uint8Array(await (await check(res, `descargar ${name}`)).arrayBuffer());
+	const data = new Uint8Array(await (await check(res, `descargar ${name}`)).arrayBuffer());
+	return { data, modifiedTime: file.modifiedTime };
 }
 
 export async function revoke(refreshToken: string) {
